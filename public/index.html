@@ -111,10 +111,17 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     <div class="step" id="step2" style="display:none;">
       <div class="step-num active" id="s2num">2</div>
       <div class="step-body">
-        <div class="step-title">핵심 검색어 확인 및 수정</div>
+        <div class="row" style="justify-content:space-between;margin-bottom:6px;">
+          <div class="step-title">핵심 검색어 확인 및 수정</div>
+          <button class="btn sm danger" onclick="resetFrom(2)">↺ 1단계로</button>
+        </div>
+        <div id="kwChipLegend" style="display:none;font-size:11px;color:var(--text-sec);margin-bottom:6px;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--blue-bg);border:1px solid var(--blue-text);margin-right:3px;"></span>AI 분석
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-text);margin-right:3px;margin-left:8px;"></span>직접 추가
+        </div>
         <div id="kwChips" style="margin-bottom:8px;"></div>
         <div class="row">
-          <input type="text" id="addKwInput" placeholder="키워드 추가..."/>
+          <input type="text" id="addKwInput" placeholder="키워드 추가 (초록색으로 표시됩니다)..."/>
           <button class="btn sm" onclick="addKw()">추가</button>
         </div>
         <div class="mt" style="text-align:right;">
@@ -127,7 +134,10 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     <div class="step" id="step3" style="display:none;">
       <div class="step-num" id="s3num">3</div>
       <div class="step-body">
-        <div class="step-title">네이버 키워드 조회</div>
+        <div class="row" style="justify-content:space-between;margin-bottom:6px;">
+          <div class="step-title">네이버 키워드 조회</div>
+          <button class="btn sm danger" onclick="resetFrom(3)">↺ 2단계로</button>
+        </div>
         <div id="s3status" class="status"></div>
       </div>
     </div>
@@ -136,7 +146,10 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     <div class="step" id="step4" style="display:none;">
       <div class="step-num" id="s4num">4</div>
       <div class="step-body">
-        <div class="step-title">Claude 필터링</div>
+        <div class="row" style="justify-content:space-between;margin-bottom:6px;">
+          <div class="step-title">Claude 필터링</div>
+          <button class="btn sm danger" onclick="resetFrom(4)">↺ 3단계로</button>
+        </div>
         <div id="s4status" class="status"></div>
       </div>
     </div>
@@ -147,7 +160,8 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
       <div class="step-body">
         <div class="step-title">주 용도 태그 완성 <span id="kwFinalCount" style="color:var(--text-hint);font-weight:400;"></span></div>
         <div class="result-box" id="finalResult"></div>
-        <div class="row mt" style="justify-content:flex-end;">
+        <div class="row mt" style="justify-content:space-between;">
+          <button class="btn sm danger" onclick="resetFrom(5)">↺ 4단계로</button>
           <div class="row">
             <button class="btn sm" onclick="copyResult('finalResult')">복사</button>
             <button class="btn sm purple" onclick="step6Expand()">다용도 확장 분석 ▶</button>
@@ -160,7 +174,10 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     <div class="step" id="step6" style="display:none;">
       <div class="step-num expand" id="s6num">6</div>
       <div class="step-body">
-        <div class="step-title">다용도 확장 분석</div>
+        <div class="row" style="justify-content:space-between;margin-bottom:6px;">
+          <div class="step-title">다용도 확장 분석</div>
+          <button class="btn sm danger" onclick="resetFrom(6)">↺ 6단계 재시작</button>
+        </div>
         <div id="s6status" class="status"></div>
         <div id="step6Result" style="display:none;">
           <div id="expandUsages" style="display:none;"></div>
@@ -233,7 +250,8 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 
 <script>
 let imageBase64='', imageType='', imageUrl='', inputMode='upload';
-let extractedKws=[], finalKws=[], finalKwsWithVol=[];
+let claudeKws=[], userKws=[], finalKws=[], finalKwsWithVol=[];
+function getAllKws(){ return [...claudeKws, ...userKws]; }
 let products=[];
 async function loadProducts(){
   try{
@@ -295,8 +313,9 @@ async function step1Analyze() {
       document.getElementById('urlWarn').style.display='';
       btn.innerHTML='분석 시작';btn.disabled=false;return;
     }
-    extractedKws=data.keywords||[];
-    window._productName = extractedKws.slice(0,2).join(' '); // 상품명 후보
+    claudeKws=data.keywords||[];
+    userKws=[];
+    window._productName = claudeKws.slice(0,2).join(' '); // 상품명 후보
     document.getElementById('step2').style.display='';
     renderKwChips();
     document.getElementById('s1num').className='step-num done';
@@ -318,7 +337,7 @@ function addKw(){
 document.getElementById('addKwInput').addEventListener('keydown',e=>{if(e.key==='Enter')addKw();});
 
 async function step3Search() {
-  if(!extractedKws.length){alert('검색어를 입력해주세요');return;}
+  if(!getAllKws().length){alert('검색어를 입력해주세요');return;}
   document.getElementById('step3').style.display='';
   document.getElementById('step4').style.display='none';
   document.getElementById('step5').style.display='none';
@@ -327,7 +346,7 @@ async function step3Search() {
   document.getElementById('s3num').className='step-num active';
   document.getElementById('s3status').innerHTML='<span class="spinner"></span> 네이버 API 조회 중...';
   try {
-    const resp=await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:extractedKws})});
+    const resp=await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:getAllKws()})});
     const data=await resp.json();
     const items=(data.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt})).sort((a,b)=>b.vol-a.vol);
     document.getElementById('s3status').textContent=`${items.length}개 키워드 수집 완료`;
@@ -341,7 +360,7 @@ async function step4Filter(candidates) {
   document.getElementById('s4num').className='step-num active';
   document.getElementById('s4status').innerHTML='<span class="spinner"></span> 브랜드/상표권/욕설 필터링 중...';
   try {
-    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter',keywords:extractedKws,candidates})});
+    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter',keywords:getAllKws(),userKeywords:userKws,candidates})});
     const data=await resp.json();
     // items 형식 또는 keywords 형식 모두 지원
     if(data.items) {
@@ -351,6 +370,14 @@ async function step4Filter(candidates) {
       finalKws=data.keywords||[];
       finalKwsWithVol=finalKws.map((k,i)=>({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0}));
     }
+    // 사용자 추가 키워드 무조건 포함
+    const userKwSet=new Set(finalKws);
+    userKws.forEach(k=>{
+      if(!userKwSet.has(k)){
+        finalKws.unshift(k);
+        finalKwsWithVol.unshift({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0});
+      }
+    });
     document.getElementById('s4status').textContent=`필터링 완료 → ${finalKws.length}개`;
     document.getElementById('s4num').className='step-num done';
     step5Result(finalKws);
@@ -372,7 +399,7 @@ async function step6Expand() {
 
   try {
     // 확장 용도 분석
-    const expandResp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'expand',mainKeywords:extractedKws,...getImageBody()})});
+    const expandResp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'expand',mainKeywords:getAllKws(),...getImageBody()})});
     const expandData=await expandResp.json();
     const expanded=expandData.expanded||[];
 
@@ -453,8 +480,50 @@ function applyToForm(id){
   }
   document.getElementById('formTags').scrollIntoView({behavior:'smooth'});
 }
+function resetFrom(step) {
+  if(step<=2){
+    // 2단계부터: 키워드 초기화
+    claudeKws=[];userKws=[];
+    document.getElementById('kwChips').innerHTML='';
+    document.getElementById('addKwInput').value='';
+    document.getElementById('kwChipLegend').style.display='none';
+    document.getElementById('step2').style.display='none';
+  }
+  if(step<=3){
+    // 3단계부터
+    document.getElementById('s3status').innerHTML='';
+    document.getElementById('step3').style.display='none';
+  }
+  if(step<=4){
+    // 4단계부터
+    finalKws=[];finalKwsWithVol=[];
+    document.getElementById('s4status').innerHTML='';
+    document.getElementById('step4').style.display='none';
+  }
+  if(step<=5){
+    // 5단계부터
+    document.getElementById('finalResult').textContent='';
+    document.getElementById('kwFinalCount').textContent='';
+    document.getElementById('step5').style.display='none';
+  }
+  // 6단계 항상 초기화
+  document.getElementById('s6status').innerHTML='';
+  document.getElementById('expandResult').innerHTML='';
+  document.getElementById('step6Result').style.display='none';
+  document.getElementById('step6').style.display='none';
+  // 스텝 번호 업데이트
+  if(step<=2) document.getElementById('s2num').className='step-num active';
+  if(step<=3) document.getElementById('s3num').className='step-num';
+  if(step<=4) document.getElementById('s4num').className='step-num';
+  if(step<=5) document.getElementById('s5num').className='step-num done';
+  document.getElementById('s6num').className='step-num expand';
+  // 해당 단계로 스크롤
+  const targetStep = step <= 2 ? 'step2' : step===3 ? 'step3' : step===4 ? 'step4' : step===5 ? 'step5' : 'step6';
+  if(step>=3) document.getElementById(targetStep).style.display='';
+}
+
 function resetAll(){
-  imageBase64='';imageType='';imageUrl='';extractedKws=[];finalKws=[];finalKwsWithVol=[];
+  imageBase64='';imageType='';imageUrl='';claudeKws=[];userKws=[];finalKws=[];finalKwsWithVol=[];
   window._productName='';
   // 1단계 초기화
   document.getElementById('uploadContent').textContent='클릭 또는 드래그해서 이미지 업로드';
@@ -464,6 +533,7 @@ function resetAll(){
   // 2단계 초기화
   document.getElementById('kwChips').innerHTML='';
   document.getElementById('addKwInput').value='';
+  document.getElementById('kwChipLegend').style.display='none';
   // 3단계 초기화
   document.getElementById('s3status').innerHTML='';
   // 4단계 초기화
