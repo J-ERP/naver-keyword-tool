@@ -356,7 +356,7 @@ async function step3Search() {
     const hintKws = userKws.length > 0 ? userKws : claudeKws;
     const resp=await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:hintKws})});
     const data=await resp.json();
-    const items=(data.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt})).sort((a,b)=>b.vol-a.vol);
+    const items=(data.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?'})).sort((a,b)=>b.vol-a.vol);
     document.getElementById('s3status').textContent=`${items.length}개 키워드 수집 완료`;
     document.getElementById('s3num').className='step-num done';
     await step4Filter(items);
@@ -429,7 +429,7 @@ async function step6Expand() {
       try {
         const kwResp=await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:usage.keywords})});
         const kwData=await kwResp.json();
-        const candidates=(kwData.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt})).sort((a,b)=>b.vol-a.vol);
+        const candidates=(kwData.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?'})).sort((a,b)=>b.vol-a.vol);
 
         // 확장 용도 필터링 - items 형식으로 반환
         const filterResp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter_expand',keywords:[usage.usage],candidates})});
