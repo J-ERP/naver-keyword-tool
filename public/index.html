@@ -225,6 +225,10 @@ function setInputMode(mode) {
   document.querySelectorAll('.input-tab').forEach((t,i)=>t.classList.toggle('active',(mode==='upload')===(i===0)));
   document.getElementById('modeUpload').style.display = mode==='upload'?'':'none';
   document.getElementById('modeUrl').style.display = mode==='url'?'':'none';
+  document.getElementById('urlInput').value='';
+  document.getElementById('urlWarn').style.display='none';
+  document.getElementById('urlPreview').innerHTML='';
+  if(mode==='upload'){imageBase64='';imageType='';document.getElementById('uploadContent').textContent='클릭 또는 드래그해서 이미지 업로드';document.getElementById('fileInput').value='';}
 }
 
 // 파일 업로드
