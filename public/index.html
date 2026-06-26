@@ -272,9 +272,9 @@ async function searchMulti() {
   for (let i = 0; i < groups.length; i++) {
     const g = groups[i];
     const params = new URLSearchParams();
-    g.kw.split(/[,，]+/).map(k=>k.trim()).filter(Boolean).slice(0,5).forEach(k => params.append('keywords', k));
+    const kwArr = g.kw.split(/[,，]+/).map(k=>k.trim()).filter(Boolean).slice(0,5);
     try {
-      const resp = await fetch(`/api/keywords?${params.toString()}`);
+      const resp = await fetch('/api/keywords', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kwArr})});
       const data = await resp.json();
       const items = (data.keywordList || [])
         .sort((a,b) => (b.monthlyPcQcCnt+b.monthlyMobileQcCnt)-(a.monthlyPcQcCnt+a.monthlyMobileQcCnt))
@@ -299,10 +299,8 @@ async function fetchKeywords(kwList, type, label) {
   switchKwTab('result');
   allKwResults = [];
   selectedKws.clear();
-  const params = new URLSearchParams();
-  kwList.forEach(k => params.append('keywords', k));
   try {
-    const resp = await fetch(`/api/keywords?${params.toString()}`);
+    const resp = await fetch('/api/keywords', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kwList})});
     const data = await resp.json();
     if (!resp.ok) { showKwStatus(`오류: ${data.error || resp.status}`); return; }
     allKwResults = (data.keywordList || [])
