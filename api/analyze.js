@@ -52,12 +52,11 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const KEY = process.env.ANTHROPIC_API_KEY;
-  const { mode, image, mediaType, imageUrl, mainKeywords, userKeywords,
-          claudeKeywords, userCandidates, claudeCandidates } = req.body;
+  const { mode, image, mediaType, imageUrl, userKeywords,
+          userCandidates, claudeCandidates, keywords, candidates } = req.body;
 
   try {
 
-    // ─── MODE: analyze (이미지 → 핵심 키워드 추출) ───────────────────────
     if (mode === 'analyze') {
       let imageContent;
       if (imageUrl) {
@@ -73,23 +72,14 @@ export default async function handler(req, res) {
 
       const result = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': KEY,
-          'anthropic-version': '2023-06-01'
-        },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': KEY, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 500,
-          messages: [{
-            role: 'user',
-            content: [
-              imageContent,
-              { type:'text', text:`이 상품 이미지를 보고 네이버 쇼핑에서 소비자가 실제로 검색할 핵심 키워드를 최대 5개 추출해줘.
-브랜드명 제외. JSON만 반환.
-예: {"keywords":["실리콘튜브","투명호스"]}` }
-            ]
-          }]
+          messages: [{ role: 'user', content: [
+            imageContent,
+            { type:'text', text:'이 상품 이미지를 보고 네이버 쇼핑에서 소비자가 실제로 검색할 핵심 키워드를 최대 5개 추출해줘.\n브랜드명 제외. JSON만 반환.\n예: {"keywords":["실리콘튜브","투명호스"]}' }
+          ]}]
         })
       });
       const data = await result.json();
@@ -98,18 +88,13 @@ export default async function handler(req, res) {
       return res.status(200).json(parsed);
     }
 
-    // ─── MODE: filter (두 후보 → md 기준으로 최종 20개 선정) ─────────────
     if (mode === 'filter') {
       const hasUser = (userKeywords||[]).length > 0;
-
-      // 블랙리스트 선적용
       const uCands = (userCandidates||[]).filter(c => isOk(c.keyword));
       const cCands = (claudeCandidates||[]).filter(c => isOk(c.keyword));
 
-      let prompt;
-
-      if (hasUser) {
-        prompt = `너는 네이버 쇼핑 키워드 전문가야. 소량다품종 판매자를 위한 태그 키워드 20개를 선정해줘.
+      const prompt = hasUser
+        ? `너는 네이버 쇼핑 키워드 전문가야. 소량다품종 판매자를 위한 태그 키워드를 선정해줘.
 
 [사용자 힌트 키워드 - 이 상품의 실제 소싱 의도]
 ${userKeywords.join(', ')}
@@ -121,68 +106,47 @@ ${uCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
 ${cCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
 
 선정 규칙:
-1. 제외: 정보성(사용법/후기/비교/~이란/~뜻), 브랜드명, 욕설, 유아/키즈, 의료기기, 식약처인증, KS/KC인증 관련
-2. [힌트 기반 조회 결과]에서 먼저 채우기 - 힌트 키워드와 직접 연관된 키워드 우선
+1. 제외: 정보성(사용법/후기/비교/~이란/~뜻), 브랜드명, 욕설, 유아/키즈, 의료기기, 식약처인증, KS/KC인증
+2. [힌트 기반 조회 결과]에서 힌트 키워드와 직접 연관된 키워드 먼저 선정
 3. 힌트 키워드 자체는 반드시 포함
 4. 나머지 빈자리는 [AI 분석 조회 결과]에서 채우기
-5. 경쟁도 LOW → MID → HIGH 순으로 우선
+5. 경쟁도 LOW → MID → HIGH 순 우선
 6. 같은 경쟁도면 검색량 높은 순
 7. 상품과 무관한 키워드 제외
-8. 관련 키워드가 20개 미만이면 모자라도 됨 (억지로 채우지 말 것)
+8. 최대 20개, 관련 키워드 부족하면 모자라도 됨
 
-JSON만 반환. 예: {"keywords":["키워드1","키워드2"], "productName":"추천상품명"}`;
-      } else {
-        prompt = `너는 네이버 쇼핑 키워드 전문가야. 소량다품종 판매자를 위한 태그 키워드 최대 20개를 선정해줘.
+JSON만: {"keywords":["키워드1","키워드2"],"productName":"추천상품명"}`
+        : `너는 네이버 쇼핑 키워드 전문가야. 소량다품종 판매자를 위한 태그 키워드를 선정해줘.
 
 [AI 분석 키워드 기반 네이버 조회 결과] (키워드,검색량,경쟁도)
 ${cCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
 
 선정 규칙:
-1. 제외: 정보성(사용법/후기/비교/~이란/~뜻), 브랜드명, 욕설, 유아/키즈, 의료기기, 식약처인증, KS/KC인증 관련
-2. 경쟁도 LOW → MID → HIGH 순으로 우선
+1. 제외: 정보성(사용법/후기/비교/~이란/~뜻), 브랜드명, 욕설, 유아/키즈, 의료기기, 식약처인증, KS/KC인증
+2. 경쟁도 LOW → MID → HIGH 순 우선
 3. 같은 경쟁도면 검색량 높은 순
 4. 상품과 무관한 키워드 제외
-5. 관련 키워드가 20개 미만이면 모자라도 됨
+5. 최대 20개, 관련 키워드 부족하면 모자라도 됨
 
-JSON만 반환. 예: {"keywords":["키워드1","키워드2"], "productName":"추천상품명"}`;
-      }
+JSON만: {"keywords":["키워드1","키워드2"],"productName":"추천상품명"}`;
 
       const parsed = await callClaude(KEY, prompt);
-
-      // 블랙리스트 후처리 + 20개 강제 제한
       const final = (parsed.keywords||[]).filter(isOk).slice(0, 20);
-
-      return res.status(200).json({
-        keywords: final,
-        productName: parsed.productName || ''
-      });
+      return res.status(200).json({ keywords: final, productName: parsed.productName||'' });
     }
 
-    // ─── MODE: expand (다용도 확장 분석) ────────────────────────────────
     if (mode === 'expand') {
       const hasUser = (userKeywords||[]).length > 0;
-
       let imageContent = null;
       if (imageUrl) {
-        try {
-          const { b64, mimeType } = await fetchImage(imageUrl);
-          imageContent = { type:'image', source:{ type:'base64', media_type:mimeType, data:b64 } };
-        } catch(e) {}
+        try { const { b64, mimeType } = await fetchImage(imageUrl); imageContent = { type:'image', source:{ type:'base64', media_type:mimeType, data:b64 } }; } catch(e) {}
       } else if (image) {
         imageContent = { type:'image', source:{ type:'base64', media_type:mediaType, data:image } };
       }
 
       const expandPrompt = hasUser
-        ? `이 상품의 힌트 키워드는 "${userKeywords.join(', ')}" 이야.
-힌트 키워드 중심으로 다른 장소/상황에서도 활용 가능한지 분석해줘.
-예) 힌트가 "가방손잡이,가방부자재"면 → 핸드메이드, DIY가방, 가방제작 방향으로 확장.
-각 용도별로 "힌트키워드+용도" 형태의 네이버 검색 키워드 뽑아줘.
-억지스러운 확장은 하지 마. 브랜드명 제외.
-JSON만: {"expanded":[{"usage":"핸드메이드","keywords":["핸드메이드가방손잡이","DIY가방부자재"]}]}`
-        : `이 상품이 주 용도 외에 다른 장소/상황에서도 활용될 수 있는지 분석해줘.
-각 용도별로 "상품명+용도" 형태의 네이버 검색 키워드 뽑아줘.
-억지스러운 확장은 하지 마. 브랜드명 제외.
-JSON만: {"expanded":[{"usage":"캠핑","keywords":["캠핑수세미","캠핑설거지"]}]}`;
+        ? `이 상품의 힌트 키워드는 "${userKeywords.join(', ')}" 이야. 힌트 키워드 중심으로 다른 장소/상황 확장 분석해줘. 각 용도별로 "힌트키워드+용도" 형태 키워드 뽑아줘. 억지 확장 금지. 브랜드명 제외.\nJSON만: {"expanded":[{"usage":"핸드메이드","keywords":["핸드메이드가방손잡이"]}]}`
+        : `이 상품이 주 용도 외 다른 장소/상황에서도 활용 가능한지 분석해줘. 각 용도별로 "상품명+용도" 형태 키워드 뽑아줘. 억지 확장 금지. 브랜드명 제외.\nJSON만: {"expanded":[{"usage":"캠핑","keywords":["캠핑수세미"]}]}`;
 
       const contentArr = [];
       if (imageContent) contentArr.push(imageContent);
@@ -190,16 +154,8 @@ JSON만: {"expanded":[{"usage":"캠핑","keywords":["캠핑수세미","캠핑설
 
       const result = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          messages: [{ role:'user', content:contentArr }]
-        })
+        headers: { 'Content-Type': 'application/json', 'x-api-key': KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role:'user', content:contentArr }] })
       });
       const data = await result.json();
       const text = data.content?.[0]?.text || '{}';
@@ -207,19 +163,11 @@ JSON만: {"expanded":[{"usage":"캠핑","keywords":["캠핑수세미","캠핑설
       return res.status(200).json(parsed);
     }
 
-    // ─── MODE: filter_expand (확장 키워드 필터링) ───────────────────────
     if (mode === 'filter_expand') {
-      const { keywords, candidates } = req.body;
       const cands = (candidates||[]).filter(c => isOk(c.keyword));
-
-      const prompt = `확장 용도 "${keywords.join(', ')}" 와 직접 관련 있고 구매 의도가 있는 키워드만 골라줘.
-후보: ${cands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
-최대 5개. 브랜드명/욕설/유아/의료/인증 관련 제외.
-JSON만: {"keywords":["키워드1","키워드2"]}`;
-
+      const prompt = `확장 용도 "${(keywords||[]).join(', ')}" 와 직접 관련 있고 구매 의도 있는 키워드만. 후보: ${cands.map(c=>`${c.keyword},${c.vol}`).join('\n')} 최대 5개. 브랜드/유아/의료/인증 제외.\nJSON만: {"keywords":["키워드1"]}`;
       const parsed = await callClaude(KEY, prompt);
-      const final = (parsed.keywords||[]).filter(isOk).slice(0, 5);
-      return res.status(200).json({ keywords: final });
+      return res.status(200).json({ keywords: (parsed.keywords||[]).filter(isOk).slice(0,5) });
     }
 
     return res.status(400).json({ error: 'unknown mode' });
