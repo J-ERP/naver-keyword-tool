@@ -7,24 +7,14 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#f5f5f3;
-  --surface:#ffffff;
-  --border:rgba(0,0,0,0.1);
-  --border-md:rgba(0,0,0,0.2);
-  --text:#1a1a1a;
-  --text-sec:#666;
-  --text-hint:#aaa;
-  --accent:#1a1a1a;
-  --radius:10px;
-  --radius-sm:6px;
-  --green-bg:#d1fae5;--green-text:#065f46;
-  --red-bg:#fee2e2;--red-text:#991b1b;
-  --yellow-bg:#fef9c3;--yellow-text:#854d0e;
-  --blue-bg:#dbeafe;--blue-text:#1e40af;
+  --bg:#f5f5f3;--surface:#fff;--border:rgba(0,0,0,0.1);--border-md:rgba(0,0,0,0.2);
+  --text:#1a1a1a;--text-sec:#666;--text-hint:#aaa;--accent:#1a1a1a;
+  --radius:10px;--radius-sm:6px;
+  --green-bg:#d1fae5;--green-text:#065f46;--red-bg:#fee2e2;--red-text:#991b1b;
+  --yellow-bg:#fef9c3;--yellow-text:#854d0e;--blue-bg:#dbeafe;--blue-text:#1e40af;
 }
 body{font-family:-apple-system,'Pretendard',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;}
 .layout{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:1280px;margin:0 auto;padding:1.25rem;}
-.layout.full{grid-template-columns:1fr;}
 .panel{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
 .panel-title{font-size:11px;font-weight:600;color:var(--text-sec);letter-spacing:.07em;text-transform:uppercase;margin-bottom:1rem;}
 h1{font-size:16px;font-weight:600;margin-bottom:1.25rem;grid-column:1/-1;}
@@ -36,147 +26,142 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
 .btn.primary:hover{opacity:.85;}
 .btn.sm{height:28px;padding:0 10px;font-size:11px;}
-.btn.danger{border-color:#fca5a5;color:#991b1b;background:#fff;}
+.btn.danger{border-color:#fca5a5;color:#991b1b;}
 .btn.danger:hover{background:var(--red-bg);}
 .row{display:flex;gap:8px;align-items:center;}
-.row-top{display:flex;gap:8px;align-items:flex-start;}
 .col{display:flex;flex-direction:column;gap:6px;}
 .label{font-size:11px;color:var(--text-sec);font-weight:500;}
-.mt{margin-top:10px;}
-.mt2{margin-top:1rem;}
-/* tabs */
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1rem;}
-.tab{padding:7px 16px;font-size:13px;cursor:pointer;color:var(--text-sec);border-bottom:2px solid transparent;margin-bottom:-1px;}
-.tab.active{color:var(--text);border-bottom-color:var(--accent);font-weight:500;}
-/* keyword result table */
-.kw-table{width:100%;border-collapse:collapse;font-size:12px;}
-.kw-table th{text-align:left;padding:5px 6px;color:var(--text-sec);border-bottom:0.5px solid var(--border);font-weight:500;font-size:11px;}
-.kw-table td{padding:7px 6px;border-bottom:0.5px solid var(--border);vertical-align:middle;}
-.kw-table tr:last-child td{border-bottom:none;}
-.kw-table tr.krow:hover td{background:var(--bg);cursor:pointer;}
-.bar{display:inline-block;height:4px;border-radius:2px;background:#ddd;vertical-align:middle;margin-left:4px;}
-.comp{font-size:10px;padding:2px 7px;border-radius:999px;}
-.comp-HIGH{background:var(--red-bg);color:var(--red-text);}
-.comp-MID{background:var(--yellow-bg);color:var(--yellow-text);}
-.comp-LOW{background:var(--green-bg);color:var(--green-text);}
-/* product table */
+.mt{margin-top:10px;}.mt2{margin-top:1rem;}
+.step{display:flex;align-items:flex-start;gap:10px;margin-bottom:1rem;}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-num.done{background:#059669;}
+.step-num.active{background:#2563eb;}
+.step-body{flex:1;}
+.step-title{font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text);}
+.upload-area{border:1.5px dashed var(--border-md);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;color:var(--text-sec);font-size:13px;}
+.upload-area:hover{border-color:var(--accent);color:var(--text);}
+.upload-area img{max-height:120px;max-width:100%;border-radius:var(--radius-sm);margin-bottom:8px;}
+.kw-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--blue-bg);color:var(--blue-text);font-size:12px;margin:3px;}
+.kw-chip button{background:none;border:none;cursor:pointer;color:var(--blue-text);font-size:14px;line-height:1;padding:0;}
+.result-box{background:#fafafa;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.9;word-break:break-all;min-height:44px;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status{font-size:12px;color:var(--text-sec);padding:6px 0;}
 .prod-table{width:100%;border-collapse:collapse;font-size:12px;}
 .prod-table th{text-align:left;padding:6px 8px;color:var(--text-sec);border-bottom:0.5px solid var(--border);font-weight:500;font-size:11px;white-space:nowrap;}
 .prod-table td{padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:top;}
 .prod-table tr:last-child td{border-bottom:none;}
-.prod-table tr.prow:hover td{background:var(--bg);}
-.tag-list{display:flex;flex-wrap:wrap;gap:4px;}
 .tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--blue-bg);color:var(--blue-text);}
-.badge-on{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--green-bg);color:var(--green-text);}
-.badge-off{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--border);color:var(--text-hint);}
-/* selected keywords */
-.kw-selected-box{background:#fafafa;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px;line-height:1.9;word-break:break-all;min-height:40px;color:var(--text);}
-.mode-toggle{display:flex;gap:6px;margin-bottom:10px;}
-.mode-btn{flex:1;height:32px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;background:#fff;color:var(--text-sec);}
-.mode-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.status{text-align:center;padding:1.5rem 0;color:var(--text-sec);font-size:12px;}
+.badge-on{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--green-bg);color:var(--green-text);cursor:pointer;}
+.badge-off{font-size:10px;padding:2px 8px;border-radius:999px;background:#eee;color:var(--text-hint);cursor:pointer;}
 .empty{text-align:center;padding:2rem 0;color:var(--text-hint);font-size:12px;}
-.search-result-item{padding:8px 10px;border-radius:var(--radius-sm);border:0.5px solid var(--border);margin-bottom:6px;cursor:pointer;}
-.search-result-item:hover{background:var(--bg);}
-.search-result-item .name{font-size:13px;font-weight:500;margin-bottom:4px;}
-.search-result-item .tags{font-size:11px;color:var(--text-sec);}
+.search-item{padding:8px 10px;border-radius:var(--radius-sm);border:0.5px solid var(--border);margin-bottom:6px;cursor:pointer;}
+.search-item:hover{background:var(--bg);}
+.search-item .name{font-size:13px;font-weight:500;margin-bottom:3px;}
+.search-item .tags{font-size:11px;color:var(--text-sec);}
 .divider{height:0.5px;background:var(--border);margin:1rem 0;}
-.num{color:var(--text-hint);font-size:11px;}
 </style>
 </head>
 <body>
-
 <div class="layout">
   <h1>소싱 키워드 관리 도구</h1>
 
-  <!-- 왼쪽: 키워드 조회 -->
+  <!-- 왼쪽: 5단계 자동화 -->
   <div class="panel">
-    <div class="panel-title">키워드 조회</div>
+    <div class="panel-title">키워드 자동 추출</div>
 
-    <div class="col">
-      <div class="label">상품 용도 구분</div>
-      <div class="mode-toggle">
-        <button class="mode-btn active" id="modeSimple" onclick="setMode('simple')">단일 용도</button>
-        <button class="mode-btn" id="modeMulti" onclick="setMode('multi')">다용도</button>
-      </div>
-    </div>
-
-    <div id="simpleInput" class="col mt">
-      <div class="label">검색 키워드 (최대 5개, 쉼표 구분)</div>
-      <div class="row">
-        <input type="text" id="kwInput" placeholder="예: 비치백, 해변가방"/>
-        <button class="btn primary" onclick="searchKeywords()">조회</button>
-      </div>
-    </div>
-
-    <div id="multiInput" style="display:none;" class="mt">
-      <div class="label" style="margin-bottom:6px;">용도별 키워드 입력</div>
-      <div id="multiGroups" class="col" style="gap:6px;"></div>
-      <div class="row mt" style="justify-content:space-between;">
-        <button class="btn sm" onclick="addGroup()">+ 용도 추가</button>
-        <button class="btn primary sm" onclick="searchMulti()">전체 조회</button>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="tabs">
-      <div class="tab active" onclick="switchKwTab('result')">조회 결과</div>
-      <div class="tab" onclick="switchKwTab('selected')">선택 키워드</div>
-    </div>
-
-    <div id="kwTabResult">
-      <div id="kwStatus" class="status" style="display:none;"></div>
-      <div id="kwTableWrap"></div>
-    </div>
-
-    <div id="kwTabSelected" style="display:none;">
-      <div class="label" style="margin-bottom:6px;">선택한 키워드 <span id="selectedCount" style="color:var(--text-hint);">(0개)</span></div>
-      <div class="kw-selected-box" id="selectedBox">-</div>
-      <div class="row mt" style="justify-content:space-between;">
-        <div class="row">
-          <button class="btn sm" onclick="copySelected()">복사</button>
-          <button class="btn sm danger" onclick="clearSelected()">초기화</button>
+    <!-- STEP 1 -->
+    <div class="step">
+      <div class="step-num" id="s1num">1</div>
+      <div class="step-body">
+        <div class="step-title">상품 이미지 업로드</div>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+          <div id="uploadContent">이미지를 클릭하거나 드래그해서 올려주세요</div>
         </div>
-        <button class="btn sm primary" onclick="applyToForm()">상품 등록에 적용 ↓</button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="onFileSelect(event)"/>
+        <div class="mt" style="text-align:right;">
+          <button class="btn primary" onclick="step1Analyze()" id="btnAnalyze" style="display:none;">분석 시작</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step" id="step2" style="display:none;">
+      <div class="step-num active" id="s2num">2</div>
+      <div class="step-body">
+        <div class="step-title">핵심 검색어 확인 및 수정</div>
+        <div id="kwChips" style="margin-bottom:8px;"></div>
+        <div class="row">
+          <input type="text" id="addKwInput" placeholder="키워드 추가..." style="flex:1;"/>
+          <button class="btn sm" onclick="addKw()">추가</button>
+        </div>
+        <div class="mt" style="text-align:right;">
+          <button class="btn primary" onclick="step3Search()">네이버 조회</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step" id="step3" style="display:none;">
+      <div class="step-num" id="s3num">3</div>
+      <div class="step-body">
+        <div class="step-title">네이버 키워드 조회 중...</div>
+        <div id="s3status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step" id="step4" style="display:none;">
+      <div class="step-num" id="s4num">4</div>
+      <div class="step-body">
+        <div class="step-title">Claude 필터링 중...</div>
+        <div id="s4status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- STEP 5 -->
+    <div class="step" id="step5" style="display:none;">
+      <div class="step-num done" id="s5num">5</div>
+      <div class="step-body">
+        <div class="step-title">태그 키워드 완성 <span id="kwFinalCount" style="color:var(--text-hint);font-weight:400;"></span></div>
+        <div class="result-box" id="finalResult"></div>
+        <div class="row mt" style="justify-content:space-between;">
+          <button class="btn sm danger" onclick="resetAll()">처음부터</button>
+          <div class="row">
+            <button class="btn sm" onclick="copyResult()">복사</button>
+            <button class="btn sm primary" onclick="applyToForm()">상품 등록에 적용 ↓</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 오른쪽: 상품 등록 + 검색 -->
+  <!-- 오른쪽: 검색 + 등록 -->
   <div style="display:flex;flex-direction:column;gap:1rem;">
-
-    <!-- 검색 -->
     <div class="panel">
-      <div class="panel-title">상품 검색 (이전 이력 재사용)</div>
+      <div class="panel-title">이전 상품 검색 (재사용)</div>
       <div class="row">
         <input type="text" id="searchInput" placeholder="상품명 또는 태그키워드로 검색..." oninput="searchProducts()"/>
       </div>
       <div id="searchResults" style="margin-top:10px;"></div>
     </div>
 
-    <!-- 등록 폼 -->
     <div class="panel">
       <div class="panel-title">상품 등록 / 수정</div>
       <input type="hidden" id="editId"/>
       <div class="col">
         <div class="label">상품명 <span style="color:var(--text-hint);">(50자 내외 권고)</span></div>
-        <input type="text" id="formName" placeholder="예: 접이식 대용량 비치백 방수 여행가방 수영가방"/>
+        <input type="text" id="formName" placeholder="예: 접이식 대용량 비치백 방수 여행가방"/>
         <div id="nameCount" style="font-size:11px;color:var(--text-hint);text-align:right;">0자</div>
       </div>
       <div class="col mt">
         <div class="label">태그 키워드 <span style="color:var(--text-hint);">(쉼표 구분, 20개 이내)</span></div>
-        <textarea id="formTags" rows="3" placeholder="예: 비치백,수영가방,해변가방,방수가방,여행가방..."></textarea>
+        <textarea id="formTags" rows="3" placeholder="예: 비치백,수영가방,해변가방,방수가방..."></textarea>
         <div id="tagCount" style="font-size:11px;color:var(--text-hint);text-align:right;">0개</div>
       </div>
       <div class="col mt">
         <div class="label">사용 여부</div>
-        <select id="formActive">
-          <option value="1">사용</option>
-          <option value="0">미사용</option>
-        </select>
+        <select id="formActive"><option value="1">사용</option><option value="0">미사용</option></select>
       </div>
       <div class="row mt2" style="justify-content:flex-end;gap:8px;">
         <button class="btn sm" onclick="resetForm()">초기화</button>
@@ -185,7 +170,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     </div>
   </div>
 
-  <!-- 하단: 상품 목록 -->
+  <!-- 하단: 목록 -->
   <div class="panel" style="grid-column:1/-1;">
     <div class="row" style="justify-content:space-between;margin-bottom:1rem;">
       <div class="panel-title" style="margin-bottom:0;">등록 상품 목록 <span id="prodCount" style="color:var(--text-hint);font-size:11px;font-weight:400;"></span></div>
@@ -193,15 +178,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     </div>
     <div style="overflow-x:auto;">
       <table class="prod-table">
-        <thead>
-          <tr>
-            <th style="width:36px;">순번</th>
-            <th>상품명</th>
-            <th>태그 키워드</th>
-            <th style="width:60px;text-align:center;">사용</th>
-            <th style="width:80px;"></th>
-          </tr>
-        </thead>
+        <thead><tr><th style="width:36px;">순번</th><th>상품명</th><th>태그 키워드</th><th style="width:60px;text-align:center;">사용</th><th style="width:80px;"></th></tr></thead>
         <tbody id="prodTableBody"></tbody>
       </table>
       <div id="prodEmpty" class="empty">등록된 상품이 없습니다</div>
@@ -210,204 +187,175 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 </div>
 
 <script>
-// ── 상태
-let allKwResults = [];
-let selectedKws = new Set();
-let mode = 'simple';
-let multiGroups = [{ label: '용도A', kw: '' }, { label: '용도B', kw: '' }];
-let multiResults = {};
+let imageBase64 = '';
+let imageType = '';
+let extractedKws = [];
 let products = JSON.parse(localStorage.getItem('sourcing_products') || '[]');
 
-// ── 모드
-function setMode(m) {
-  mode = m;
-  document.getElementById('modeSimple').classList.toggle('active', m === 'simple');
-  document.getElementById('modeMulti').classList.toggle('active', m === 'multi');
-  document.getElementById('simpleInput').style.display = m === 'simple' ? '' : 'none';
-  document.getElementById('multiInput').style.display = m === 'multi' ? '' : 'none';
-  if (m === 'multi') renderMultiGroups();
+// ── STEP 1: 이미지 업로드
+function onFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  imageType = file.type;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    imageBase64 = ev.target.result.split(',')[1];
+    document.getElementById('uploadContent').innerHTML = `<img src="${ev.target.result}"/><div style="font-size:12px;color:var(--text-sec);">${file.name}</div>`;
+    document.getElementById('btnAnalyze').style.display = '';
+  };
+  reader.readAsDataURL(file);
 }
 
-function renderMultiGroups() {
-  document.getElementById('multiGroups').innerHTML = multiGroups.map((g, i) =>
-    `<div class="row">
-      <input type="text" style="width:80px;flex:none;" value="${g.label}" oninput="multiGroups[${i}].label=this.value" placeholder="용도명"/>
-      <input type="text" style="flex:1;" value="${g.kw}" oninput="multiGroups[${i}].kw=this.value" placeholder="키워드 (쉼표 구분)"/>
-      ${multiGroups.length > 2 ? `<button class="btn sm danger" onclick="removeGroup(${i})">-</button>` : ''}
-    </div>`
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor='var(--accent)'; });
+uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor=''; });
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.style.borderColor='';
+  const file = e.dataTransfer.files[0];
+  if (file) { document.getElementById('fileInput').files = e.dataTransfer.files; onFileSelect({target:{files:[file]}}); }
+});
+
+// ── STEP 2: Claude 분석
+async function step1Analyze() {
+  if (!imageBase64) return;
+  document.getElementById('btnAnalyze').innerHTML = '<span class="spinner"></span> 분석 중...';
+  document.getElementById('btnAnalyze').disabled = true;
+  try {
+    const resp = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ mode:'analyze', image:imageBase64, mediaType:imageType })
+    });
+    const data = await resp.json();
+    extractedKws = data.keywords || [];
+    document.getElementById('step2').style.display = '';
+    renderKwChips();
+    document.getElementById('s1num').className = 'step-num done';
+    document.getElementById('s2num').className = 'step-num active';
+  } catch(e) {
+    alert('분석 오류: ' + e.message);
+  } finally {
+    document.getElementById('btnAnalyze').innerHTML = '분석 시작';
+    document.getElementById('btnAnalyze').disabled = false;
+  }
+}
+
+function renderKwChips() {
+  document.getElementById('kwChips').innerHTML = extractedKws.map((k,i) =>
+    `<span class="kw-chip">${k}<button onclick="removeKw(${i})">×</button></span>`
   ).join('');
 }
 
-function addGroup() {
-  const labels = ['용도A','용도B','용도C','용도D','용도E'];
-  multiGroups.push({ label: labels[multiGroups.length] || `용도${multiGroups.length+1}`, kw: '' });
-  renderMultiGroups();
+function removeKw(i) { extractedKws.splice(i,1); renderKwChips(); }
+
+function addKw() {
+  const v = document.getElementById('addKwInput').value.trim();
+  if (!v) return;
+  extractedKws.push(v);
+  document.getElementById('addKwInput').value = '';
+  renderKwChips();
 }
 
-function removeGroup(i) {
-  multiGroups.splice(i, 1);
-  renderMultiGroups();
-}
+document.getElementById('addKwInput').addEventListener('keydown', e => { if(e.key==='Enter') addKw(); });
 
-// ── 키워드 조회 (단일)
-async function searchKeywords() {
-  const raw = document.getElementById('kwInput').value.trim();
-  if (!raw) return;
-  await fetchKeywords(raw.split(/[,，]+/).map(k=>k.trim()).filter(Boolean), 'simple', null);
-}
+// ── STEP 3: 네이버 API 조회
+async function step3Search() {
+  if (!extractedKws.length) { alert('검색어를 입력해주세요'); return; }
+  document.getElementById('step3').style.display = '';
+  document.getElementById('step4').style.display = 'none';
+  document.getElementById('step5').style.display = 'none';
+  document.getElementById('s2num').className = 'step-num done';
+  document.getElementById('s3num').className = 'step-num active';
+  document.getElementById('s3status').innerHTML = '<span class="spinner"></span> 네이버 API 조회 중...';
 
-// ── 키워드 조회 (다용도)
-async function searchMulti() {
-  const groups = multiGroups.filter(g => g.kw.trim());
-  if (!groups.length) return;
-  allKwResults = [];
-  multiResults = {};
-  showKwStatus('<span class="spinner"></span> 조회 중...');
-  switchKwTab('result');
-
-  const total = groups.length;
-  // 각 용도별 할당 개수 계산
-  const alloc = allocate(20, total);
-
-  for (let i = 0; i < groups.length; i++) {
-    const g = groups[i];
-    const params = new URLSearchParams();
-    const kwArr = g.kw.split(/[,，]+/).map(k=>k.trim()).filter(Boolean).slice(0,5);
-    try {
-      const resp = await fetch('/api/keywords', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kwArr})});
-      const data = await resp.json();
-      const items = (data.keywordList || [])
-        .sort((a,b) => (b.monthlyPcQcCnt+b.monthlyMobileQcCnt)-(a.monthlyPcQcCnt+a.monthlyMobileQcCnt))
-        .slice(0, alloc[i]);
-      multiResults[g.label] = items;
-      allKwResults = allKwResults.concat(items);
-    } catch(e) {}
-  }
-
-  hideKwStatus();
-  renderMultiTable();
-}
-
-function allocate(total, n) {
-  const base = Math.floor(total / n);
-  const rem = total % n;
-  return Array.from({length: n}, (_, i) => base + (i < rem ? 1 : 0));
-}
-
-async function fetchKeywords(kwList, type, label) {
-  showKwStatus('<span class="spinner"></span> 네이버 API 조회 중...');
-  switchKwTab('result');
-  allKwResults = [];
-  selectedKws.clear();
   try {
-    const resp = await fetch('/api/keywords', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:kwList})});
-    const data = await resp.json();
-    if (!resp.ok) { showKwStatus(`오류: ${data.error || resp.status}`); return; }
-    allKwResults = (data.keywordList || [])
-      .sort((a,b)=>(b.monthlyPcQcCnt+b.monthlyMobileQcCnt)-(a.monthlyPcQcCnt+a.monthlyMobileQcCnt))
-      .slice(0, 30);
-    hideKwStatus();
-    renderSimpleTable();
-  } catch(e) { showKwStatus(`오류: ${e.message}`); }
-}
-
-function renderSimpleTable() {
-  if (!allKwResults.length) { document.getElementById('kwTableWrap').innerHTML = '<div class="empty">결과가 없습니다</div>'; return; }
-  const max = Math.max(...allKwResults.map(r=>r.monthlyPcQcCnt+r.monthlyMobileQcCnt));
-  let html = `<table class="kw-table">
-    <tr><th style="width:28px"></th><th>키워드</th><th>월간검색량</th><th>경쟁도</th></tr>`;
-  allKwResults.forEach((r,i) => {
-    const total = r.monthlyPcQcCnt + r.monthlyMobileQcCnt;
-    const vol = total >= 10000 ? (total/10000).toFixed(1)+'만' : total.toLocaleString();
-    const bw = Math.round((total/max)*60);
-    const sel = selectedKws.has(r.relKeyword);
-    html += `<tr class="krow" onclick="toggleKw('${r.relKeyword.replace(/'/g,"\\'")}')">
-      <td><input type="checkbox" ${sel?'checked':''} style="pointer-events:none;"/></td>
-      <td>${r.relKeyword}</td>
-      <td><span>${vol}</span><span class="bar" style="width:${bw}px"></span></td>
-      <td><span class="comp comp-${r.compIdx}">${r.compIdx==='HIGH'?'높음':r.compIdx==='MID'?'중간':'낮음'}</span></td>
-    </tr>`;
-  });
-  html += '</table>';
-  document.getElementById('kwTableWrap').innerHTML = html;
-}
-
-function renderMultiTable() {
-  if (!Object.keys(multiResults).length) return;
-  const max = Math.max(...allKwResults.map(r=>r.monthlyPcQcCnt+r.monthlyMobileQcCnt), 1);
-  let html = '';
-  Object.entries(multiResults).forEach(([label, items]) => {
-    html += `<div style="font-size:11px;font-weight:600;color:var(--text-sec);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.05em;">${label} (${items.length}개)</div>
-    <table class="kw-table"><tr><th style="width:28px"></th><th>키워드</th><th>월간검색량</th><th>경쟁도</th></tr>`;
-    items.forEach(r => {
-      const total = r.monthlyPcQcCnt + r.monthlyMobileQcCnt;
-      const vol = total >= 10000 ? (total/10000).toFixed(1)+'만' : total.toLocaleString();
-      const bw = Math.round((total/max)*60);
-      const sel = selectedKws.has(r.relKeyword);
-      html += `<tr class="krow" onclick="toggleKw('${r.relKeyword.replace(/'/g,"\\'")}')">
-        <td><input type="checkbox" ${sel?'checked':''} style="pointer-events:none;"/></td>
-        <td>${r.relKeyword}</td>
-        <td>${vol}<span class="bar" style="width:${bw}px"></span></td>
-        <td><span class="comp comp-${r.compIdx}">${r.compIdx==='HIGH'?'높음':r.compIdx==='MID'?'중간':'낮음'}</span></td>
-      </tr>`;
+    const resp = await fetch('/api/keywords', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({keywords: extractedKws})
     });
-    html += '</table>';
-  });
-  document.getElementById('kwTableWrap').innerHTML = html;
+    const data = await resp.json();
+    const items = (data.keywordList || []).map(r => ({
+      keyword: r.relKeyword,
+      vol: r.monthlyPcQcCnt + r.monthlyMobileQcCnt
+    })).sort((a,b) => b.vol - a.vol);
+
+    document.getElementById('s3status').textContent = `${items.length}개 키워드 수집 완료`;
+    document.getElementById('s3num').className = 'step-num done';
+    await step4Filter(items);
+  } catch(e) {
+    document.getElementById('s3status').textContent = '오류: ' + e.message;
+  }
 }
 
-function toggleKw(kw) {
-  selectedKws.has(kw) ? selectedKws.delete(kw) : selectedKws.add(kw);
-  if (mode === 'multi') renderMultiTable(); else renderSimpleTable();
-  updateSelectedBox();
+// ── STEP 4: Claude 필터링
+async function step4Filter(candidates) {
+  document.getElementById('step4').style.display = '';
+  document.getElementById('s4num').className = 'step-num active';
+  document.getElementById('s4status').innerHTML = '<span class="spinner"></span> 관련 없는 키워드 필터링 중...';
+
+  try {
+    const resp = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ mode:'filter', keywords: extractedKws, candidates })
+    });
+    const data = await resp.json();
+    const finalKws = data.keywords || [];
+
+    document.getElementById('s4status').textContent = `필터링 완료 → ${finalKws.length}개`;
+    document.getElementById('s4num').className = 'step-num done';
+    step5Result(finalKws);
+  } catch(e) {
+    document.getElementById('s4status').textContent = '오류: ' + e.message;
+  }
 }
 
-function updateSelectedBox() {
-  const arr = [...selectedKws];
-  document.getElementById('selectedCount').textContent = `(${arr.length}개)`;
-  document.getElementById('selectedBox').textContent = arr.length ? arr.join(',') : '-';
+// ── STEP 5: 결과
+function step5Result(kws) {
+  document.getElementById('step5').style.display = '';
+  document.getElementById('kwFinalCount').textContent = `(${kws.length}개)`;
+  document.getElementById('finalResult').textContent = kws.join(',');
 }
 
-function clearSelected() { selectedKws.clear(); updateSelectedBox(); if(mode==='multi') renderMultiTable(); else renderSimpleTable(); }
-
-function copySelected() {
-  const txt = [...selectedKws].join(',');
-  navigator.clipboard.writeText(txt).then(()=>alert('복사되었습니다'));
+function copyResult() {
+  const txt = document.getElementById('finalResult').textContent;
+  navigator.clipboard.writeText(txt).then(() => alert('복사되었습니다'));
 }
 
 function applyToForm() {
-  document.getElementById('formTags').value = [...selectedKws].join(',');
+  document.getElementById('formTags').value = document.getElementById('finalResult').textContent;
   updateTagCount();
-  switchKwTab('selected');
   document.getElementById('formTags').scrollIntoView({behavior:'smooth'});
 }
 
-function showKwStatus(msg) { const el=document.getElementById('kwStatus'); el.innerHTML=msg; el.style.display=''; }
-function hideKwStatus() { document.getElementById('kwStatus').style.display='none'; }
-
-function switchKwTab(tab) {
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(tab==='result')===(i===0)));
-  document.getElementById('kwTabResult').style.display = tab==='result'?'':'none';
-  document.getElementById('kwTabSelected').style.display = tab==='selected'?'':'none';
+function resetAll() {
+  imageBase64 = ''; imageType = ''; extractedKws = [];
+  document.getElementById('uploadContent').textContent = '이미지를 클릭하거나 드래그해서 올려주세요';
+  document.getElementById('btnAnalyze').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('step2').style.display = 'none';
+  document.getElementById('step3').style.display = 'none';
+  document.getElementById('step4').style.display = 'none';
+  document.getElementById('step5').style.display = 'none';
+  document.getElementById('s1num').className = 'step-num';
 }
 
-// ── 상품 등록
+// ── 상품 관리
 function saveProduct() {
   const name = document.getElementById('formName').value.trim();
   const tags = document.getElementById('formTags').value.trim();
   const active = document.getElementById('formActive').value === '1';
   const editId = document.getElementById('editId').value;
   if (!name) { alert('상품명을 입력하세요'); return; }
-
   if (editId) {
     const idx = products.findIndex(p => p.id === editId);
-    if (idx !== -1) products[idx] = { ...products[idx], name, tags, active };
+    if (idx !== -1) products[idx] = {...products[idx], name, tags, active};
   } else {
-    products.push({ id: Date.now().toString(), name, tags, active, createdAt: new Date().toISOString() });
+    products.push({id: Date.now().toString(), name, tags, active, createdAt: new Date().toISOString()});
   }
-  persist();
-  resetForm();
-  renderProducts();
+  persist(); resetForm(); renderProducts();
 }
 
 function resetForm() {
@@ -433,8 +381,7 @@ function editProduct(id) {
 function deleteProduct(id) {
   if (!confirm('삭제하시겠습니까?')) return;
   products = products.filter(p => p.id !== id);
-  persist();
-  renderProducts();
+  persist(); renderProducts();
 }
 
 function toggleActive(id) {
@@ -444,21 +391,20 @@ function toggleActive(id) {
 
 function persist() { localStorage.setItem('sourcing_products', JSON.stringify(products)); }
 
-function renderProducts(list) {
-  const data = list || products;
+function renderProducts() {
   const tbody = document.getElementById('prodTableBody');
   const empty = document.getElementById('prodEmpty');
   document.getElementById('prodCount').textContent = `(${products.length}개)`;
-  if (!data.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  if (!products.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
   empty.style.display = 'none';
-  tbody.innerHTML = data.map((p, i) => {
+  tbody.innerHTML = products.map((p,i) => {
     const tagArr = p.tags ? p.tags.split(',').map(t=>t.trim()).filter(Boolean) : [];
-    const tagHtml = tagArr.slice(0,10).map(t=>`<span class="tag">${t}</span>`).join('') + (tagArr.length>10?`<span style="font-size:10px;color:var(--text-hint);"> +${tagArr.length-10}</span>`:'');
-    return `<tr class="prow">
-      <td class="num">${i+1}</td>
-      <td style="min-width:140px;font-weight:500;">${p.name}</td>
-      <td><div class="tag-list">${tagHtml}</div></td>
-      <td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" style="cursor:pointer;" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td>
+    const tagHtml = tagArr.slice(0,8).map(t=>`<span class="tag">${t}</span>`).join(' ') + (tagArr.length>8?` <span style="font-size:10px;color:var(--text-hint);">+${tagArr.length-8}</span>`:'');
+    return `<tr>
+      <td style="color:var(--text-hint);font-size:11px;">${i+1}</td>
+      <td style="font-weight:500;min-width:140px;">${p.name}</td>
+      <td>${tagHtml}</td>
+      <td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td>
       <td><div class="row" style="gap:4px;justify-content:flex-end;">
         <button class="btn sm" onclick="editProduct('${p.id}')">수정</button>
         <button class="btn sm danger" onclick="deleteProduct('${p.id}')">삭제</button>
@@ -467,20 +413,16 @@ function renderProducts(list) {
   }).join('');
 }
 
-// ── 검색
 function searchProducts() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   const wrap = document.getElementById('searchResults');
   if (!q) { wrap.innerHTML = ''; return; }
-  const results = products.filter(p =>
-    p.name.toLowerCase().includes(q) ||
-    (p.tags && p.tags.toLowerCase().includes(q))
-  );
+  const results = products.filter(p => p.name.toLowerCase().includes(q) || (p.tags && p.tags.toLowerCase().includes(q)));
   if (!results.length) { wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);padding:6px 0;">검색 결과 없음</div>'; return; }
   wrap.innerHTML = results.slice(0,5).map(p =>
-    `<div class="search-result-item" onclick="applyFromSearch('${p.id}')">
+    `<div class="search-item" onclick="applyFromSearch('${p.id}')">
       <div class="name">${p.name}</div>
-      <div class="tags">${p.tags || '-'}</div>
+      <div class="tags">${p.tags||'-'}</div>
     </div>`
   ).join('');
 }
@@ -497,7 +439,6 @@ function applyFromSearch(id) {
   document.getElementById('formName').scrollIntoView({behavior:'smooth'});
 }
 
-// ── 글자수 카운터
 function updateNameCount() {
   const v = document.getElementById('formName').value;
   const el = document.getElementById('nameCount');
@@ -513,9 +454,7 @@ function updateTagCount() {
 }
 document.getElementById('formName').addEventListener('input', updateNameCount);
 document.getElementById('formTags').addEventListener('input', updateTagCount);
-document.getElementById('kwInput').addEventListener('keydown', e => { if(e.key==='Enter') searchKeywords(); });
 
-// ── CSV 내보내기
 function exportCSV() {
   if (!products.length) { alert('데이터가 없습니다'); return; }
   const rows = [['순번','상품명','태그키워드','사용여부','등록일']];
