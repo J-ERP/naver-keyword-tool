@@ -147,8 +147,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
       <div class="step-body">
         <div class="step-title">주 용도 태그 완성 <span id="kwFinalCount" style="color:var(--text-hint);font-weight:400;"></span></div>
         <div class="result-box" id="finalResult"></div>
-        <div class="row mt" style="justify-content:space-between;">
-          <button class="btn sm danger" onclick="resetAll()">처음부터</button>
+        <div class="row mt" style="justify-content:flex-end;">
           <div class="row">
             <button class="btn sm" onclick="copyResult('finalResult')">복사</button>
             <button class="btn sm purple" onclick="step6Expand()">다용도 확장 분석 ▶</button>
@@ -178,6 +177,10 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
           <button class="btn sm" onclick="applyToForm('finalResult')" style="width:100%;">주 용도만 적용 ↓</button>
         </div>
       </div>
+    </div>
+    <!-- 처음부터 버튼 - 맨 하단 -->
+    <div style="margin-top:1rem;text-align:center;">
+      <button class="btn danger" onclick="resetAll()" style="width:100%;">↺ 처음부터 (새 상품 시작)</button>
     </div>
   </div>
 
@@ -443,13 +446,38 @@ function applyToForm(id){
   document.getElementById('formTags').scrollIntoView({behavior:'smooth'});
 }
 function resetAll(){
-  imageBase64='';imageType='';imageUrl='';extractedKws=[];finalKws=[];
+  imageBase64='';imageType='';imageUrl='';extractedKws=[];finalKws=[];finalKwsWithVol=[];
+  window._productName='';
+  // 1단계 초기화
   document.getElementById('uploadContent').textContent='클릭 또는 드래그해서 이미지 업로드';
   document.getElementById('fileInput').value='';
   document.getElementById('urlInput').value='';
   document.getElementById('urlWarn').style.display='none';
+  // 2단계 초기화
+  document.getElementById('kwChips').innerHTML='';
+  document.getElementById('addKwInput').value='';
+  // 3단계 초기화
+  document.getElementById('s3status').innerHTML='';
+  // 4단계 초기화
+  document.getElementById('s4status').innerHTML='';
+  // 5단계 초기화
+  document.getElementById('finalResult').textContent='';
+  document.getElementById('kwFinalCount').textContent='';
+  // 6단계 초기화
+  document.getElementById('s6status').innerHTML='';
+  document.getElementById('expandResult').innerHTML='';
+  document.getElementById('step6Result').style.display='none';
+  // 모든 단계 숨기기
   ['step2','step3','step4','step5','step6'].forEach(id=>document.getElementById(id).style.display='none');
+  // 스텝 번호 초기화
   document.getElementById('s1num').className='step-num pending';
+  document.getElementById('s2num').className='step-num active';
+  document.getElementById('s3num').className='step-num';
+  document.getElementById('s4num').className='step-num';
+  document.getElementById('s5num').className='step-num done';
+  document.getElementById('s6num').className='step-num expand';
+  // 스크롤 맨 위로
+  window.scrollTo(0,0);
 }
 
 // 상품 관리
