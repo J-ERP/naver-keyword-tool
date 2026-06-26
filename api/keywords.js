@@ -19,17 +19,17 @@ export default async function handler(req, res) {
   const path = '/keywordstool';
   const message = `${timestamp}.GET.${path}`;
   const signature = crypto.createHmac('sha256', SECRET_KEY).update(message).digest('base64');
-  const params = new URLSearchParams({ showDetail: '1' });
-  kwList.forEach(k => params.append('hintKeywords', k));
+  const queryParts = ['showDetail=1'];
+  kwList.forEach(k => queryParts.push(`hintKeywords=${encodeURIComponent(k)}`));
+  const queryString = queryParts.join('&');
 
   try {
-    const response = await fetch(`https://api.naver.com${path}?${params.toString()}`, {
+    const response = await fetch(`https://api.naver.com${path}?${queryString}`, {
       headers: {
         'X-Timestamp': String(timestamp),
         'X-API-KEY': ACCESS_LICENSE,
         'X-Customer': String(CUSTOMER_ID),
         'X-Signature': signature,
-        'Content-Type': 'application/json',
       },
     });
     const data = await response.json();
