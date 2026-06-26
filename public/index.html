@@ -489,7 +489,7 @@ function resetAll(){
 }
 
 // 상품 관리
-function saveProduct(){
+async function saveProduct(){
   const name=document.getElementById('formName').value.trim();
   const tags=document.getElementById('formTags').value.trim();
   const active=document.getElementById('formActive').value==='1';
