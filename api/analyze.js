@@ -147,19 +147,25 @@ JSON 형식으로만 응답해. 키워드와 검색량을 함께 반환해.
       '의료용','의료기기','의료튜브','주사기','카테터','마이크로피펫','채수병','무균',
       '건강기능','의약외품','식약처','약품','약재',
       'KC인증','KS인증','CE인증','안전인증',
-      '집진기','집진','PTFE','PFA튜브',
-      '주름관'
+      '집진기','집진','PTFE','PFA튜브','타이곤',
+      '주름관','실험용','연구용'
     ];
 
-    if (parsed.items && Array.isArray(parsed.items)) {
-      parsed.items = parsed.items.filter(item => 
-        !BLACKLIST_PATTERNS.some(p => item.keyword.includes(p))
-      );
+    const isBlacklisted = (kw) => BLACKLIST_PATTERNS.some(p => kw.includes(p));
+
+    // keywords 형식을 items 형식으로 통일
+    if (parsed.keywords && Array.isArray(parsed.keywords) && !parsed.items) {
+      parsed.items = parsed.keywords
+        .filter(kw => !isBlacklisted(kw))
+        .slice(0, 20)
+        .map(kw => ({ keyword: kw, vol: 0 }));
+      delete parsed.keywords;
     }
-    if (parsed.keywords && Array.isArray(parsed.keywords)) {
-      parsed.keywords = parsed.keywords.filter(kw =>
-        !BLACKLIST_PATTERNS.some(p => kw.includes(p))
-      );
+
+    if (parsed.items && Array.isArray(parsed.items)) {
+      parsed.items = parsed.items
+        .filter(item => !isBlacklisted(item.keyword))
+        .slice(0, 20);
     }
 
     return res.status(200).json(parsed);
