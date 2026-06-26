@@ -141,6 +141,27 @@ JSON 형식으로만 응답해. 키워드와 검색량을 함께 반환해.
     const text = data.content?.[0]?.text || '{}';
     const clean = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
+
+    // 블랙리스트 후처리 - Claude가 놓친 키워드 강제 제거
+    const BLACKLIST_PATTERNS = [
+      '의료용','의료기기','의료튜브','주사기','카테터','마이크로피펫','채수병','무균',
+      '건강기능','의약외품','식약처','약품','약재',
+      'KC인증','KS인증','CE인증','안전인증',
+      '집진기','집진','PTFE','PFA튜브',
+      '주름관'
+    ];
+
+    if (parsed.items && Array.isArray(parsed.items)) {
+      parsed.items = parsed.items.filter(item => 
+        !BLACKLIST_PATTERNS.some(p => item.keyword.includes(p))
+      );
+    }
+    if (parsed.keywords && Array.isArray(parsed.keywords)) {
+      parsed.keywords = parsed.keywords.filter(kw =>
+        !BLACKLIST_PATTERNS.some(p => kw.includes(p))
+      );
+    }
+
     return res.status(200).json(parsed);
   } catch (e) {
     return res.status(500).json({ error: e.message });
