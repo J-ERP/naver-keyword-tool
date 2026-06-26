@@ -352,7 +352,9 @@ async function step3Search() {
   document.getElementById('s3num').className='step-num active';
   document.getElementById('s3status').innerHTML='<span class="spinner"></span> 네이버 API 조회 중...';
   try {
-    const resp=await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:getAllKws()})});
+    // 사용자 추가 키워드 있으면 그것만 힌트로 사용, 없으면 Claude 분석 키워드 사용
+    const hintKws = userKws.length > 0 ? userKws : claudeKws;
+    const resp=await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:hintKws})});
     const data=await resp.json();
     const items=(data.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt})).sort((a,b)=>b.vol-a.vol);
     document.getElementById('s3status').textContent=`${items.length}개 키워드 수집 완료`;
