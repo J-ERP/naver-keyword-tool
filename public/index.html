@@ -234,7 +234,15 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 <script>
 let imageBase64='', imageType='', imageUrl='', inputMode='upload';
 let extractedKws=[], finalKws=[], finalKwsWithVol=[];
-let products=JSON.parse(localStorage.getItem('sourcing_products')||'[]');
+let products=[];
+async function loadProducts(){
+  try{
+    const resp=await fetch('/api/products');
+    products=await resp.json();
+    if(!Array.isArray(products))products=[];
+    renderProducts();
+  }catch(e){console.error(e);}
+}
 
 function setInputMode(mode) {
   inputMode=mode;
@@ -487,9 +495,15 @@ function saveProduct(){
   const active=document.getElementById('formActive').value==='1';
   const editId=document.getElementById('editId').value;
   if(!name){alert('상품명을 입력하세요');return;}
-  if(editId){const idx=products.findIndex(p=>p.id===editId);if(idx!==-1)products[idx]={...products[idx],name,tags,active};}
-  else products.push({id:Date.now().toString(),name,tags,active,createdAt:new Date().toISOString()});
-  persist();resetForm();renderProducts();
+  if(editId){
+    const idx=products.findIndex(p=>p.id===editId);
+    if(idx!==-1){products[idx]={...products[idx],name,tags,active};await persist('update',{id:editId,name,tags,active});}
+  } else {
+    const newP={id:Date.now().toString(),name,tags,active,created_at:new Date().toISOString()};
+    products.push(newP);
+    await persist('add',newP);
+  }
+  resetForm();renderProducts();
 }
 function resetForm(){
   document.getElementById('editId').value='';document.getElementById('formName').value='';
@@ -502,9 +516,19 @@ function editProduct(id){
   document.getElementById('formTags').value=p.tags;document.getElementById('formActive').value=p.active?'1':'0';
   updateNameCount();updateTagCount();document.getElementById('formName').scrollIntoView({behavior:'smooth'});
 }
-function deleteProduct(id){if(!confirm('삭제하시겠습니까?'))return;products=products.filter(p=>p.id!==id);persist();renderProducts();}
-function toggleActive(id){const p=products.find(p=>p.id===id);if(p){p.active=!p.active;persist();renderProducts();}}
-function persist(){localStorage.setItem('sourcing_products',JSON.stringify(products));}
+async function deleteProduct(id){if(!confirm('삭제하시겠습니까?'))return;products=products.filter(p=>p.id!==id);await persist('delete',{id});renderProducts();}
+async function toggleActive(id){const p=products.find(p=>p.id===id);if(p){p.active=!p.active;await persist('update',{id:p.id,name:p.name,tags:p.tags,active:p.active});renderProducts();}}
+async function persist(action, data) {
+  try {
+    if(action==='add') {
+      await fetch('/api/products',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    } else if(action==='update') {
+      await fetch('/api/products',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    } else if(action==='delete') {
+      await fetch(`/api/products?id=${data.id}`,{method:'DELETE'});
+    }
+  } catch(e){console.error(e);}
+}
 function renderProducts(){
   const tbody=document.getElementById('prodTableBody');
   const empty=document.getElementById('prodEmpty');
@@ -514,7 +538,7 @@ function renderProducts(){
   tbody.innerHTML=products.map((p,i)=>{
     const tagArr=p.tags?p.tags.split(',').map(t=>t.trim()).filter(Boolean):[];
     const tagHtml=tagArr.slice(0,8).map(t=>`<span class="tag">${t}</span>`).join(' ')+(tagArr.length>8?` <span style="font-size:10px;color:var(--text-hint);">+${tagArr.length-8}</span>`:'');
-    return `<tr><td style="color:var(--text-hint);font-size:11px;">${i+1}</td><td style="font-weight:500;min-width:140px;">${p.name}</td><td>${tagHtml}</td><td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td><td style="text-align:center;font-size:11px;color:var(--text-sec);">${p.createdAt?p.createdAt.slice(0,10):'-'}</td><td><div class="row" style="gap:4px;justify-content:flex-end;"><button class="btn sm" onclick="editProduct('${p.id}')">수정</button><button class="btn sm danger" onclick="deleteProduct('${p.id}')">삭제</button></div></td></tr>`;
+    return `<tr><td style="color:var(--text-hint);font-size:11px;">${i+1}</td><td style="font-weight:500;min-width:140px;">${p.name}</td><td>${tagHtml}</td><td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td><td style="text-align:center;font-size:11px;color:var(--text-sec);">${p.created_at?p.created_at.slice(0,10):'-'}</td><td><div class="row" style="gap:4px;justify-content:flex-end;"><button class="btn sm" onclick="editProduct('${p.id}')">수정</button><button class="btn sm danger" onclick="deleteProduct('${p.id}')">삭제</button></div></td></tr>`;
   }).join('');
 }
 function searchProducts(){
@@ -553,7 +577,7 @@ function exportCSV(){
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
   a.download=`소싱키워드_${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }
-renderProducts();
+loadProducts();
 </script>
 </body>
 </html>
