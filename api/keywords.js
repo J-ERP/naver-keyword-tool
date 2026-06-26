@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const ACCESS_LICENSE = process.env.NAVER_ACCESS_LICENSE;
   const SECRET_KEY = process.env.NAVER_SECRET_KEY;
 
-  const { keywords } = req.query;
+  const keywords = req.query.keywords || req.query.hintKeywords;
   if (!keywords) return res.status(400).json({ error: 'keywords required' });
 
   const kwList = keywords.split(',').map(k => k.trim()).filter(Boolean).slice(0, 5);
@@ -19,12 +19,11 @@ export default async function handler(req, res) {
   const path = '/keywordstool';
   const message = `${timestamp}.GET.${path}`;
   const signature = crypto.createHmac('sha256', SECRET_KEY).update(message).digest('base64');
-  const queryParts = ['showDetail=1'];
-  kwList.forEach(k => queryParts.push(`hintKeywords=${encodeURIComponent(k)}`));
-  const queryString = queryParts.join('&');
+
+  const query = 'showDetail=1&' + kwList.map(k => 'hintKeywords=' + encodeURIComponent(k)).join('&');
 
   try {
-    const response = await fetch(`https://api.naver.com${path}?${queryString}`, {
+    const response = await fetch(`https://api.naver.com${path}?${query}`, {
       headers: {
         'X-Timestamp': String(timestamp),
         'X-API-KEY': ACCESS_LICENSE,
