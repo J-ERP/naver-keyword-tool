@@ -220,7 +220,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     </div>
     <div style="overflow-x:auto;">
       <table class="prod-table">
-        <thead><tr><th style="width:36px;">순번</th><th>상품명</th><th>태그 키워드</th><th style="width:60px;text-align:center;">사용</th><th style="width:80px;"></th></tr></thead>
+        <thead><tr><th style="width:36px;">순번</th><th>상품명</th><th>태그 키워드</th><th style="width:70px;text-align:center;">사용</th><th style="width:80px;text-align:center;">등록일</th><th style="width:80px;"></th></tr></thead>
         <tbody id="prodTableBody"></tbody>
       </table>
       <div id="prodEmpty" class="empty">등록된 상품이 없습니다</div>
@@ -390,17 +390,29 @@ async function step6Expand() {
     // 결과 표시
     document.getElementById('s6status').textContent=`확장 용도 ${expanded.length}개 발견 → 총 ${combined.length}개 완성`;
     document.getElementById('expandUsages').innerHTML=expanded.map(u=>`<span class="expand-usage">${u.usage}</span>`).join('');
-    document.getElementById('expandResult').textContent=combined.join(',');
+    
+    // 색상 구분 태그 렌더링
+    const mainSet = new Set(finalKws);
+    const expandSet = new Set(combined.filter(k=>!mainSet.has(k)));
+    const tagHtml6 = combined.map(k => {
+      if(mainSet.has(k)) return `<span style="display:inline-block;padding:3px 9px;margin:2px;border-radius:999px;font-size:12px;background:var(--blue-bg);color:var(--blue-text);">${k}</span>`;
+      return `<span style="display:inline-block;padding:3px 9px;margin:2px;border-radius:999px;font-size:12px;background:var(--purple-bg);color:var(--purple-text);">${k}</span>`;
+    }).join('');
+    document.getElementById('expandResult').innerHTML=tagHtml6;
+    document.getElementById('expandResult').dataset.raw=combined.join(',');
     document.getElementById('step6Result').style.display='';
 
   } catch(e){document.getElementById('s6status').textContent='오류: '+e.message;}
 }
 
 function copyResult(id){
-  navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>alert('복사되었습니다'));
+  const el=document.getElementById(id);
+  const txt=el.dataset.raw||el.textContent;
+  navigator.clipboard.writeText(txt).then(()=>alert('복사되었습니다'));
 }
 function applyToForm(id){
-  document.getElementById('formTags').value=document.getElementById(id).textContent;
+  const el=document.getElementById(id);
+  document.getElementById('formTags').value=el.dataset.raw||el.textContent;
   updateTagCount();
   document.getElementById('formTags').scrollIntoView({behavior:'smooth'});
 }
@@ -448,7 +460,7 @@ function renderProducts(){
   tbody.innerHTML=products.map((p,i)=>{
     const tagArr=p.tags?p.tags.split(',').map(t=>t.trim()).filter(Boolean):[];
     const tagHtml=tagArr.slice(0,8).map(t=>`<span class="tag">${t}</span>`).join(' ')+(tagArr.length>8?` <span style="font-size:10px;color:var(--text-hint);">+${tagArr.length-8}</span>`:'');
-    return `<tr><td style="color:var(--text-hint);font-size:11px;">${i+1}</td><td style="font-weight:500;min-width:140px;">${p.name}</td><td>${tagHtml}</td><td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td><td><div class="row" style="gap:4px;justify-content:flex-end;"><button class="btn sm" onclick="editProduct('${p.id}')">수정</button><button class="btn sm danger" onclick="deleteProduct('${p.id}')">삭제</button></div></td></tr>`;
+    return `<tr><td style="color:var(--text-hint);font-size:11px;">${i+1}</td><td style="font-weight:500;min-width:140px;">${p.name}</td><td>${tagHtml}</td><td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td><td style="text-align:center;font-size:11px;color:var(--text-sec);">${p.createdAt?p.createdAt.slice(0,10):'-'}</td><td><div class="row" style="gap:4px;justify-content:flex-end;"><button class="btn sm" onclick="editProduct('${p.id}')">수정</button><button class="btn sm danger" onclick="deleteProduct('${p.id}')">삭제</button></div></td></tr>`;
   }).join('');
 }
 function searchProducts(){
