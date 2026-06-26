@@ -391,14 +391,14 @@ async function step6Expand() {
     document.getElementById('s6status').textContent=`확장 용도 ${expanded.length}개 발견 → 총 ${combined.length}개 완성`;
     document.getElementById('expandUsages').innerHTML=expanded.map(u=>`<span class="expand-usage">${u.usage}</span>`).join('');
     
-    // 색상 구분 태그 렌더링
+    // 색상 구분 인라인 텍스트 렌더링 (쉼표 구분, 확장 키워드만 보라색)
     const mainSet = new Set(finalKws);
-    const expandSet = new Set(combined.filter(k=>!mainSet.has(k)));
-    const tagHtml6 = combined.map(k => {
-      if(mainSet.has(k)) return `<span style="display:inline-block;padding:3px 9px;margin:2px;border-radius:999px;font-size:12px;background:var(--blue-bg);color:var(--blue-text);">${k}</span>`;
-      return `<span style="display:inline-block;padding:3px 9px;margin:2px;border-radius:999px;font-size:12px;background:var(--purple-bg);color:var(--purple-text);">${k}</span>`;
+    const spanHtml = combined.map((k,i) => {
+      const comma = i < combined.length-1 ? '<span style="color:var(--text);">,</span>' : '';
+      if(mainSet.has(k)) return `<span style="color:var(--text);">${k}</span>${comma}`;
+      return `<span style="color:#5b21b6;font-weight:500;">${k}</span>${comma}`;
     }).join('');
-    document.getElementById('expandResult').innerHTML=tagHtml6;
+    document.getElementById('expandResult').innerHTML=spanHtml;
     document.getElementById('expandResult').dataset.raw=combined.join(',');
     document.getElementById('step6Result').style.display='';
 
