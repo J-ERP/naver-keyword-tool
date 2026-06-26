@@ -33,25 +33,37 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 .label{font-size:11px;color:var(--text-sec);font-weight:500;}
 .mt{margin-top:10px;}.mt2{margin-top:1rem;}
 .step{display:flex;align-items:flex-start;gap:10px;margin-bottom:1rem;}
-.step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-num{width:22px;height:22px;border-radius:50%;background:#ccc;color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
 .step-num.done{background:#059669;}
 .step-num.active{background:#2563eb;}
+.step-num.pending{background:#1a1a1a;}
 .step-body{flex:1;}
 .step-title{font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text);}
-.upload-area{border:1.5px dashed var(--border-md);border-radius:var(--radius-sm);padding:1.5rem;text-align:center;cursor:pointer;color:var(--text-sec);font-size:13px;}
-.upload-area:hover{border-color:var(--accent);color:var(--text);}
-.upload-area img{max-height:120px;max-width:100%;border-radius:var(--radius-sm);margin-bottom:8px;}
-.kw-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--blue-bg);color:var(--blue-text);font-size:12px;margin:3px;}
+/* 입력 방식 탭 */
+.input-tabs{display:flex;gap:4px;margin-bottom:10px;}
+.input-tab{flex:1;height:30px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;background:#fff;color:var(--text-sec);}
+.input-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+/* 업로드 */
+.upload-area{border:1.5px dashed var(--border-md);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;cursor:pointer;color:var(--text-sec);font-size:13px;}
+.upload-area:hover{border-color:var(--accent);}
+.upload-area img{max-height:100px;max-width:100%;border-radius:var(--radius-sm);margin-bottom:6px;}
+/* URL 입력 */
+.url-notice{font-size:11px;color:var(--text-hint);margin-top:4px;}
+.url-warn{font-size:11px;color:#92400e;background:var(--yellow-bg);padding:6px 10px;border-radius:var(--radius-sm);margin-top:6px;}
+/* 키워드 칩 */
+.kw-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:var(--blue-bg);color:var(--blue-text);font-size:12px;margin:3px;}
 .kw-chip button{background:none;border:none;cursor:pointer;color:var(--blue-text);font-size:14px;line-height:1;padding:0;}
+/* 결과 */
 .result-box{background:#fafafa;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.9;word-break:break-all;min-height:44px;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .status{font-size:12px;color:var(--text-sec);padding:6px 0;}
+/* 상품 테이블 */
 .prod-table{width:100%;border-collapse:collapse;font-size:12px;}
 .prod-table th{text-align:left;padding:6px 8px;color:var(--text-sec);border-bottom:0.5px solid var(--border);font-weight:500;font-size:11px;white-space:nowrap;}
 .prod-table td{padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:top;}
 .prod-table tr:last-child td{border-bottom:none;}
-.tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--blue-bg);color:var(--blue-text);}
+.tag{font-size:11px;padding:2px 7px;border-radius:999px;background:var(--blue-bg);color:var(--blue-text);}
 .badge-on{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--green-bg);color:var(--green-text);cursor:pointer;}
 .badge-off{font-size:10px;padding:2px 8px;border-radius:999px;background:#eee;color:var(--text-hint);cursor:pointer;}
 .empty{text-align:center;padding:2rem 0;color:var(--text-hint);font-size:12px;}
@@ -59,28 +71,46 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 .search-item:hover{background:var(--bg);}
 .search-item .name{font-size:13px;font-weight:500;margin-bottom:3px;}
 .search-item .tags{font-size:11px;color:var(--text-sec);}
-.divider{height:0.5px;background:var(--border);margin:1rem 0;}
 </style>
 </head>
 <body>
 <div class="layout">
   <h1>소싱 키워드 관리 도구</h1>
 
-  <!-- 왼쪽: 5단계 자동화 -->
+  <!-- 왼쪽: 5단계 -->
   <div class="panel">
     <div class="panel-title">키워드 자동 추출</div>
 
     <!-- STEP 1 -->
     <div class="step">
-      <div class="step-num" id="s1num">1</div>
+      <div class="step-num pending" id="s1num">1</div>
       <div class="step-body">
-        <div class="step-title">상품 이미지 업로드</div>
-        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-          <div id="uploadContent">이미지를 클릭하거나 드래그해서 올려주세요</div>
+        <div class="step-title">상품 이미지 입력</div>
+        <div class="input-tabs">
+          <button class="input-tab active" onclick="setInputMode('upload')">이미지 업로드</button>
+          <button class="input-tab" onclick="setInputMode('url')">URL 입력</button>
         </div>
-        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="onFileSelect(event)"/>
+
+        <!-- 업로드 모드 -->
+        <div id="modeUpload">
+          <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <div id="uploadContent">클릭 또는 드래그해서 이미지 업로드</div>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="onFileSelect(event)"/>
+        </div>
+
+        <!-- URL 모드 -->
+        <div id="modeUrl" style="display:none;">
+          <div class="row">
+            <input type="text" id="urlInput" placeholder="상품 이미지 URL 붙여넣기..."/>
+          </div>
+          <div class="url-notice">※ 네이버/쿠팡은 보안정책으로 실패할 수 있어요. 실패 시 이미지 직접 업로드를 이용해주세요.</div>
+          <div id="urlWarn" style="display:none;"></div>
+          <div id="urlPreview" style="margin-top:8px;text-align:center;"></div>
+        </div>
+
         <div class="mt" style="text-align:right;">
-          <button class="btn primary" onclick="step1Analyze()" id="btnAnalyze" style="display:none;">분석 시작</button>
+          <button class="btn primary" onclick="step1Analyze()" id="btnAnalyze">분석 시작</button>
         </div>
       </div>
     </div>
@@ -92,7 +122,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
         <div class="step-title">핵심 검색어 확인 및 수정</div>
         <div id="kwChips" style="margin-bottom:8px;"></div>
         <div class="row">
-          <input type="text" id="addKwInput" placeholder="키워드 추가..." style="flex:1;"/>
+          <input type="text" id="addKwInput" placeholder="키워드 추가..."/>
           <button class="btn sm" onclick="addKw()">추가</button>
         </div>
         <div class="mt" style="text-align:right;">
@@ -105,7 +135,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     <div class="step" id="step3" style="display:none;">
       <div class="step-num" id="s3num">3</div>
       <div class="step-body">
-        <div class="step-title">네이버 키워드 조회 중...</div>
+        <div class="step-title">네이버 키워드 조회</div>
         <div id="s3status" class="status"></div>
       </div>
     </div>
@@ -114,7 +144,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     <div class="step" id="step4" style="display:none;">
       <div class="step-num" id="s4num">4</div>
       <div class="step-body">
-        <div class="step-title">Claude 필터링 중...</div>
+        <div class="step-title">Claude 필터링</div>
         <div id="s4status" class="status"></div>
       </div>
     </div>
@@ -136,13 +166,11 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     </div>
   </div>
 
-  <!-- 오른쪽: 검색 + 등록 -->
+  <!-- 오른쪽 -->
   <div style="display:flex;flex-direction:column;gap:1rem;">
     <div class="panel">
       <div class="panel-title">이전 상품 검색 (재사용)</div>
-      <div class="row">
-        <input type="text" id="searchInput" placeholder="상품명 또는 태그키워드로 검색..." oninput="searchProducts()"/>
-      </div>
+      <input type="text" id="searchInput" placeholder="상품명 또는 태그키워드로 검색..." oninput="searchProducts()"/>
       <div id="searchResults" style="margin-top:10px;"></div>
     </div>
 
@@ -170,7 +198,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
     </div>
   </div>
 
-  <!-- 하단: 목록 -->
+  <!-- 하단 목록 -->
   <div class="panel" style="grid-column:1/-1;">
     <div class="row" style="justify-content:space-between;margin-bottom:1rem;">
       <div class="panel-title" style="margin-bottom:0;">등록 상품 목록 <span id="prodCount" style="color:var(--text-hint);font-size:11px;font-weight:400;"></span></div>
@@ -187,12 +215,19 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 </div>
 
 <script>
-let imageBase64 = '';
-let imageType = '';
-let extractedKws = [];
-let products = JSON.parse(localStorage.getItem('sourcing_products') || '[]');
+let imageBase64='', imageType='', imageUrl='', inputMode='upload';
+let extractedKws=[];
+let products=JSON.parse(localStorage.getItem('sourcing_products')||'[]');
 
-// ── STEP 1: 이미지 업로드
+// 입력 모드 전환
+function setInputMode(mode) {
+  inputMode = mode;
+  document.querySelectorAll('.input-tab').forEach((t,i)=>t.classList.toggle('active',(mode==='upload')===(i===0)));
+  document.getElementById('modeUpload').style.display = mode==='upload'?'':'none';
+  document.getElementById('modeUrl').style.display = mode==='url'?'':'none';
+}
+
+// 파일 업로드
 function onFileSelect(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -200,272 +235,223 @@ function onFileSelect(e) {
   const reader = new FileReader();
   reader.onload = (ev) => {
     imageBase64 = ev.target.result.split(',')[1];
-    document.getElementById('uploadContent').innerHTML = `<img src="${ev.target.result}"/><div style="font-size:12px;color:var(--text-sec);">${file.name}</div>`;
-    document.getElementById('btnAnalyze').style.display = '';
+    document.getElementById('uploadContent').innerHTML = `<img src="${ev.target.result}"/><div style="font-size:11px;color:var(--text-sec);margin-top:4px;">${file.name}</div>`;
   };
   reader.readAsDataURL(file);
 }
 
 const uploadArea = document.getElementById('uploadArea');
-uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor='var(--accent)'; });
-uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor=''; });
-uploadArea.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadArea.style.borderColor='';
-  const file = e.dataTransfer.files[0];
-  if (file) { document.getElementById('fileInput').files = e.dataTransfer.files; onFileSelect({target:{files:[file]}}); }
+uploadArea.addEventListener('dragover', e=>{e.preventDefault();uploadArea.style.borderColor='var(--accent)';});
+uploadArea.addEventListener('dragleave', ()=>{uploadArea.style.borderColor='';});
+uploadArea.addEventListener('drop', e=>{
+  e.preventDefault(); uploadArea.style.borderColor='';
+  const file=e.dataTransfer.files[0];
+  if(file){document.getElementById('fileInput').files=e.dataTransfer.files;onFileSelect({target:{files:[file]}});}
 });
 
-// ── STEP 2: Claude 분석
+// 분석 시작
 async function step1Analyze() {
-  if (!imageBase64) return;
-  document.getElementById('btnAnalyze').innerHTML = '<span class="spinner"></span> 분석 중...';
-  document.getElementById('btnAnalyze').disabled = true;
+  const btn = document.getElementById('btnAnalyze');
+  btn.innerHTML='<span class="spinner"></span> 분석 중...';
+  btn.disabled=true;
+
+  document.getElementById('urlWarn').style.display='none';
+
+  let body;
+  if (inputMode==='upload') {
+    if (!imageBase64) { alert('이미지를 업로드해주세요'); btn.innerHTML='분석 시작'; btn.disabled=false; return; }
+    body = { mode:'analyze', image:imageBase64, mediaType:imageType };
+  } else {
+    imageUrl = document.getElementById('urlInput').value.trim();
+    if (!imageUrl) { alert('URL을 입력해주세요'); btn.innerHTML='분석 시작'; btn.disabled=false; return; }
+    body = { mode:'analyze', imageUrl };
+  }
+
   try {
     const resp = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ mode:'analyze', image:imageBase64, mediaType:imageType })
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
     });
     const data = await resp.json();
+
+    if (data.error === 'url_failed') {
+      document.getElementById('urlWarn').innerHTML = `⚠️ URL 이미지 로드 실패 (${data.message}). 이미지를 직접 업로드해주세요.`;
+      document.getElementById('urlWarn').style.display='';
+      btn.innerHTML='분석 시작'; btn.disabled=false; return;
+    }
+
     extractedKws = data.keywords || [];
-    document.getElementById('step2').style.display = '';
+    document.getElementById('step2').style.display='';
     renderKwChips();
-    document.getElementById('s1num').className = 'step-num done';
-    document.getElementById('s2num').className = 'step-num active';
+    document.getElementById('s1num').className='step-num done';
+    document.getElementById('s2num').className='step-num active';
   } catch(e) {
-    alert('분석 오류: ' + e.message);
+    alert('오류: '+e.message);
   } finally {
-    document.getElementById('btnAnalyze').innerHTML = '분석 시작';
-    document.getElementById('btnAnalyze').disabled = false;
+    btn.innerHTML='분석 시작'; btn.disabled=false;
   }
 }
 
 function renderKwChips() {
-  document.getElementById('kwChips').innerHTML = extractedKws.map((k,i) =>
+  document.getElementById('kwChips').innerHTML = extractedKws.map((k,i)=>
     `<span class="kw-chip">${k}<button onclick="removeKw(${i})">×</button></span>`
   ).join('');
 }
-
-function removeKw(i) { extractedKws.splice(i,1); renderKwChips(); }
-
-function addKw() {
-  const v = document.getElementById('addKwInput').value.trim();
-  if (!v) return;
+function removeKw(i){extractedKws.splice(i,1);renderKwChips();}
+function addKw(){
+  const v=document.getElementById('addKwInput').value.trim();
+  if(!v)return;
   extractedKws.push(v);
-  document.getElementById('addKwInput').value = '';
+  document.getElementById('addKwInput').value='';
   renderKwChips();
 }
+document.getElementById('addKwInput').addEventListener('keydown',e=>{if(e.key==='Enter')addKw();});
 
-document.getElementById('addKwInput').addEventListener('keydown', e => { if(e.key==='Enter') addKw(); });
-
-// ── STEP 3: 네이버 API 조회
 async function step3Search() {
-  if (!extractedKws.length) { alert('검색어를 입력해주세요'); return; }
-  document.getElementById('step3').style.display = '';
-  document.getElementById('step4').style.display = 'none';
-  document.getElementById('step5').style.display = 'none';
-  document.getElementById('s2num').className = 'step-num done';
-  document.getElementById('s3num').className = 'step-num active';
-  document.getElementById('s3status').innerHTML = '<span class="spinner"></span> 네이버 API 조회 중...';
-
+  if(!extractedKws.length){alert('검색어를 입력해주세요');return;}
+  document.getElementById('step3').style.display='';
+  document.getElementById('step4').style.display='none';
+  document.getElementById('step5').style.display='none';
+  document.getElementById('s2num').className='step-num done';
+  document.getElementById('s3num').className='step-num active';
+  document.getElementById('s3status').innerHTML='<span class="spinner"></span> 네이버 API 조회 중...';
   try {
-    const resp = await fetch('/api/keywords', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({keywords: extractedKws})
-    });
+    const resp = await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:extractedKws})});
     const data = await resp.json();
-    const items = (data.keywordList || []).map(r => ({
-      keyword: r.relKeyword,
-      vol: r.monthlyPcQcCnt + r.monthlyMobileQcCnt
-    })).sort((a,b) => b.vol - a.vol);
-
-    document.getElementById('s3status').textContent = `${items.length}개 키워드 수집 완료`;
-    document.getElementById('s3num').className = 'step-num done';
+    const items = (data.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt})).sort((a,b)=>b.vol-a.vol);
+    document.getElementById('s3status').textContent=`${items.length}개 키워드 수집 완료`;
+    document.getElementById('s3num').className='step-num done';
     await step4Filter(items);
-  } catch(e) {
-    document.getElementById('s3status').textContent = '오류: ' + e.message;
-  }
+  } catch(e){document.getElementById('s3status').textContent='오류: '+e.message;}
 }
 
-// ── STEP 4: Claude 필터링
 async function step4Filter(candidates) {
-  document.getElementById('step4').style.display = '';
-  document.getElementById('s4num').className = 'step-num active';
-  document.getElementById('s4status').innerHTML = '<span class="spinner"></span> 관련 없는 키워드 필터링 중...';
-
+  document.getElementById('step4').style.display='';
+  document.getElementById('s4num').className='step-num active';
+  document.getElementById('s4status').innerHTML='<span class="spinner"></span> 브랜드/상표권/욕설 필터링 중...';
   try {
-    const resp = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ mode:'filter', keywords: extractedKws, candidates })
-    });
+    const resp = await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter',keywords:extractedKws,candidates})});
     const data = await resp.json();
-    const finalKws = data.keywords || [];
-
-    document.getElementById('s4status').textContent = `필터링 완료 → ${finalKws.length}개`;
-    document.getElementById('s4num').className = 'step-num done';
+    const finalKws = data.keywords||[];
+    document.getElementById('s4status').textContent=`필터링 완료 → ${finalKws.length}개`;
+    document.getElementById('s4num').className='step-num done';
     step5Result(finalKws);
-  } catch(e) {
-    document.getElementById('s4status').textContent = '오류: ' + e.message;
-  }
+  } catch(e){document.getElementById('s4status').textContent='오류: '+e.message;}
 }
 
-// ── STEP 5: 결과
 function step5Result(kws) {
-  document.getElementById('step5').style.display = '';
-  document.getElementById('kwFinalCount').textContent = `(${kws.length}개)`;
-  document.getElementById('finalResult').textContent = kws.join(',');
+  document.getElementById('step5').style.display='';
+  document.getElementById('kwFinalCount').textContent=`(${kws.length}개)`;
+  document.getElementById('finalResult').textContent=kws.join(',');
 }
 
-function copyResult() {
-  const txt = document.getElementById('finalResult').textContent;
-  navigator.clipboard.writeText(txt).then(() => alert('복사되었습니다'));
+function copyResult(){
+  navigator.clipboard.writeText(document.getElementById('finalResult').textContent).then(()=>alert('복사되었습니다'));
 }
-
-function applyToForm() {
-  document.getElementById('formTags').value = document.getElementById('finalResult').textContent;
+function applyToForm(){
+  document.getElementById('formTags').value=document.getElementById('finalResult').textContent;
   updateTagCount();
   document.getElementById('formTags').scrollIntoView({behavior:'smooth'});
 }
-
-function resetAll() {
-  imageBase64 = ''; imageType = ''; extractedKws = [];
-  document.getElementById('uploadContent').textContent = '이미지를 클릭하거나 드래그해서 올려주세요';
-  document.getElementById('btnAnalyze').style.display = 'none';
-  document.getElementById('fileInput').value = '';
-  document.getElementById('step2').style.display = 'none';
-  document.getElementById('step3').style.display = 'none';
-  document.getElementById('step4').style.display = 'none';
-  document.getElementById('step5').style.display = 'none';
-  document.getElementById('s1num').className = 'step-num';
+function resetAll(){
+  imageBase64='';imageType='';imageUrl='';extractedKws=[];
+  document.getElementById('uploadContent').textContent='클릭 또는 드래그해서 이미지 업로드';
+  document.getElementById('fileInput').value='';
+  document.getElementById('urlInput').value='';
+  document.getElementById('urlWarn').style.display='none';
+  document.getElementById('urlPreview').innerHTML='';
+  ['step2','step3','step4','step5'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('s1num').className='step-num pending';
 }
 
-// ── 상품 관리
-function saveProduct() {
-  const name = document.getElementById('formName').value.trim();
-  const tags = document.getElementById('formTags').value.trim();
-  const active = document.getElementById('formActive').value === '1';
-  const editId = document.getElementById('editId').value;
-  if (!name) { alert('상품명을 입력하세요'); return; }
-  if (editId) {
-    const idx = products.findIndex(p => p.id === editId);
-    if (idx !== -1) products[idx] = {...products[idx], name, tags, active};
-  } else {
-    products.push({id: Date.now().toString(), name, tags, active, createdAt: new Date().toISOString()});
-  }
-  persist(); resetForm(); renderProducts();
+// 상품 관리
+function saveProduct(){
+  const name=document.getElementById('formName').value.trim();
+  const tags=document.getElementById('formTags').value.trim();
+  const active=document.getElementById('formActive').value==='1';
+  const editId=document.getElementById('editId').value;
+  if(!name){alert('상품명을 입력하세요');return;}
+  if(editId){const idx=products.findIndex(p=>p.id===editId);if(idx!==-1)products[idx]={...products[idx],name,tags,active};}
+  else products.push({id:Date.now().toString(),name,tags,active,createdAt:new Date().toISOString()});
+  persist();resetForm();renderProducts();
 }
-
-function resetForm() {
-  document.getElementById('editId').value = '';
-  document.getElementById('formName').value = '';
-  document.getElementById('formTags').value = '';
-  document.getElementById('formActive').value = '1';
-  document.getElementById('nameCount').textContent = '0자';
-  document.getElementById('tagCount').textContent = '0개';
+function resetForm(){
+  document.getElementById('editId').value='';
+  document.getElementById('formName').value='';
+  document.getElementById('formTags').value='';
+  document.getElementById('formActive').value='1';
+  document.getElementById('nameCount').textContent='0자';
+  document.getElementById('tagCount').textContent='0개';
 }
-
-function editProduct(id) {
-  const p = products.find(p => p.id === id);
-  if (!p) return;
-  document.getElementById('editId').value = p.id;
-  document.getElementById('formName').value = p.name;
-  document.getElementById('formTags').value = p.tags;
-  document.getElementById('formActive').value = p.active ? '1' : '0';
-  updateNameCount(); updateTagCount();
+function editProduct(id){
+  const p=products.find(p=>p.id===id);if(!p)return;
+  document.getElementById('editId').value=p.id;
+  document.getElementById('formName').value=p.name;
+  document.getElementById('formTags').value=p.tags;
+  document.getElementById('formActive').value=p.active?'1':'0';
+  updateNameCount();updateTagCount();
   document.getElementById('formName').scrollIntoView({behavior:'smooth'});
 }
-
-function deleteProduct(id) {
-  if (!confirm('삭제하시겠습니까?')) return;
-  products = products.filter(p => p.id !== id);
-  persist(); renderProducts();
+function deleteProduct(id){
+  if(!confirm('삭제하시겠습니까?'))return;
+  products=products.filter(p=>p.id!==id);persist();renderProducts();
 }
-
-function toggleActive(id) {
-  const p = products.find(p => p.id === id);
-  if (p) { p.active = !p.active; persist(); renderProducts(); }
-}
-
-function persist() { localStorage.setItem('sourcing_products', JSON.stringify(products)); }
-
-function renderProducts() {
-  const tbody = document.getElementById('prodTableBody');
-  const empty = document.getElementById('prodEmpty');
-  document.getElementById('prodCount').textContent = `(${products.length}개)`;
-  if (!products.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = products.map((p,i) => {
-    const tagArr = p.tags ? p.tags.split(',').map(t=>t.trim()).filter(Boolean) : [];
-    const tagHtml = tagArr.slice(0,8).map(t=>`<span class="tag">${t}</span>`).join(' ') + (tagArr.length>8?` <span style="font-size:10px;color:var(--text-hint);">+${tagArr.length-8}</span>`:'');
-    return `<tr>
-      <td style="color:var(--text-hint);font-size:11px;">${i+1}</td>
-      <td style="font-weight:500;min-width:140px;">${p.name}</td>
-      <td>${tagHtml}</td>
-      <td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td>
-      <td><div class="row" style="gap:4px;justify-content:flex-end;">
-        <button class="btn sm" onclick="editProduct('${p.id}')">수정</button>
-        <button class="btn sm danger" onclick="deleteProduct('${p.id}')">삭제</button>
-      </div></td>
-    </tr>`;
+function toggleActive(id){const p=products.find(p=>p.id===id);if(p){p.active=!p.active;persist();renderProducts();}}
+function persist(){localStorage.setItem('sourcing_products',JSON.stringify(products));}
+function renderProducts(){
+  const tbody=document.getElementById('prodTableBody');
+  const empty=document.getElementById('prodEmpty');
+  document.getElementById('prodCount').textContent=`(${products.length}개)`;
+  if(!products.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  tbody.innerHTML=products.map((p,i)=>{
+    const tagArr=p.tags?p.tags.split(',').map(t=>t.trim()).filter(Boolean):[];
+    const tagHtml=tagArr.slice(0,8).map(t=>`<span class="tag">${t}</span>`).join(' ')+(tagArr.length>8?` <span style="font-size:10px;color:var(--text-hint);">+${tagArr.length-8}</span>`:'');
+    return `<tr><td style="color:var(--text-hint);font-size:11px;">${i+1}</td><td style="font-weight:500;min-width:140px;">${p.name}</td><td>${tagHtml}</td><td style="text-align:center;"><span class="${p.active?'badge-on':'badge-off'}" onclick="toggleActive('${p.id}')">${p.active?'사용':'미사용'}</span></td><td><div class="row" style="gap:4px;justify-content:flex-end;"><button class="btn sm" onclick="editProduct('${p.id}')">수정</button><button class="btn sm danger" onclick="deleteProduct('${p.id}')">삭제</button></div></td></tr>`;
   }).join('');
 }
-
-function searchProducts() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const wrap = document.getElementById('searchResults');
-  if (!q) { wrap.innerHTML = ''; return; }
-  const results = products.filter(p => p.name.toLowerCase().includes(q) || (p.tags && p.tags.toLowerCase().includes(q)));
-  if (!results.length) { wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);padding:6px 0;">검색 결과 없음</div>'; return; }
-  wrap.innerHTML = results.slice(0,5).map(p =>
-    `<div class="search-item" onclick="applyFromSearch('${p.id}')">
-      <div class="name">${p.name}</div>
-      <div class="tags">${p.tags||'-'}</div>
-    </div>`
-  ).join('');
+function searchProducts(){
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  const wrap=document.getElementById('searchResults');
+  if(!q){wrap.innerHTML='';return;}
+  const results=products.filter(p=>p.name.toLowerCase().includes(q)||(p.tags&&p.tags.toLowerCase().includes(q)));
+  if(!results.length){wrap.innerHTML='<div style="font-size:12px;color:var(--text-hint);padding:6px 0;">검색 결과 없음</div>';return;}
+  wrap.innerHTML=results.slice(0,5).map(p=>`<div class="search-item" onclick="applyFromSearch('${p.id}')"><div class="name">${p.name}</div><div class="tags">${p.tags||'-'}</div></div>`).join('');
 }
-
-function applyFromSearch(id) {
-  const p = products.find(p => p.id === id);
-  if (!p) return;
-  document.getElementById('formName').value = p.name;
-  document.getElementById('formTags').value = p.tags;
-  document.getElementById('editId').value = '';
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchResults').innerHTML = '';
-  updateNameCount(); updateTagCount();
+function applyFromSearch(id){
+  const p=products.find(p=>p.id===id);if(!p)return;
+  document.getElementById('formName').value=p.name;
+  document.getElementById('formTags').value=p.tags;
+  document.getElementById('editId').value='';
+  document.getElementById('searchInput').value='';
+  document.getElementById('searchResults').innerHTML='';
+  updateNameCount();updateTagCount();
   document.getElementById('formName').scrollIntoView({behavior:'smooth'});
 }
-
-function updateNameCount() {
-  const v = document.getElementById('formName').value;
-  const el = document.getElementById('nameCount');
-  el.textContent = `${v.length}자`;
-  el.style.color = v.length > 100 ? '#991b1b' : v.length > 50 ? '#92400e' : 'var(--text-hint)';
+function updateNameCount(){
+  const v=document.getElementById('formName').value;
+  const el=document.getElementById('nameCount');
+  el.textContent=`${v.length}자`;
+  el.style.color=v.length>100?'#991b1b':v.length>50?'#92400e':'var(--text-hint)';
 }
-function updateTagCount() {
-  const v = document.getElementById('formTags').value;
-  const cnt = v.split(',').map(t=>t.trim()).filter(Boolean).length;
-  const el = document.getElementById('tagCount');
-  el.textContent = `${cnt}개`;
-  el.style.color = cnt > 20 ? '#991b1b' : 'var(--text-hint)';
+function updateTagCount(){
+  const v=document.getElementById('formTags').value;
+  const cnt=v.split(',').map(t=>t.trim()).filter(Boolean).length;
+  const el=document.getElementById('tagCount');
+  el.textContent=`${cnt}개`;
+  el.style.color=cnt>20?'#991b1b':'var(--text-hint)';
 }
-document.getElementById('formName').addEventListener('input', updateNameCount);
-document.getElementById('formTags').addEventListener('input', updateTagCount);
-
-function exportCSV() {
-  if (!products.length) { alert('데이터가 없습니다'); return; }
-  const rows = [['순번','상품명','태그키워드','사용여부','등록일']];
-  products.forEach((p,i) => rows.push([i+1, p.name, p.tags, p.active?'사용':'미사용', p.createdAt?.slice(0,10)||'']));
-  const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'}));
-  a.download = `소싱키워드_${new Date().toISOString().slice(0,10)}.csv`;
+document.getElementById('formName').addEventListener('input',updateNameCount);
+document.getElementById('formTags').addEventListener('input',updateTagCount);
+function exportCSV(){
+  if(!products.length){alert('데이터가 없습니다');return;}
+  const rows=[['순번','상품명','태그키워드','사용여부','등록일']];
+  products.forEach((p,i)=>rows.push([i+1,p.name,p.tags,p.active?'사용':'미사용',p.createdAt?.slice(0,10)||'']));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`소싱키워드_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
-
 renderProducts();
 </script>
 </body>
