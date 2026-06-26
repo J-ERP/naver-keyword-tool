@@ -379,6 +379,12 @@ async function step4Filter(candidates) {
       finalKws=data.keywords||[];
       finalKwsWithVol=finalKws.map((k,i)=>({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0}));
     }
+    // 상품명 자동 완성 - 사용자 추가 키워드 있으면 Claude 추천 상품명 사용
+    if(data.productName) {
+      window._productName = data.productName;
+    } else if(userKws.length > 0) {
+      window._productName = userKws.slice(0,3).join(' ');
+    }
     // 사용자 추가 키워드 누락 시 강제 포함
     const userKwSet=new Set(finalKws);
     userKws.forEach(k=>{
