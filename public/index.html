@@ -367,6 +367,8 @@ async function step4Filter(candidates) {
   document.getElementById('s4status').innerHTML='<span class="spinner"></span> 브랜드/상표권/욕설 필터링 중...';
   try {
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter',keywords:getAllKws(),userKeywords:userKws,candidates})});
+    // 사용자 키워드를 후보에 추가 (없으면 추가)
+    userKws.forEach(k=>{ if(!candidates.find(c=>c.keyword===k)) candidates.push({keyword:k,vol:0}); });
     const data=await resp.json();
     // items 형식 또는 keywords 형식 모두 지원
     if(data.items) {
@@ -376,12 +378,12 @@ async function step4Filter(candidates) {
       finalKws=data.keywords||[];
       finalKwsWithVol=finalKws.map((k,i)=>({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0}));
     }
-    // 사용자 추가 키워드 무조건 포함
+    // 사용자 추가 키워드 누락 시 강제 포함
     const userKwSet=new Set(finalKws);
     userKws.forEach(k=>{
       if(!userKwSet.has(k)){
-        finalKws.unshift(k);
-        finalKwsWithVol.unshift({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0});
+        finalKws.push(k);
+        finalKwsWithVol.push({keyword:k,vol:0});
       }
     });
     document.getElementById('s4status').textContent=`필터링 완료 → ${finalKws.length}개`;
