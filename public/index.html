@@ -334,7 +334,8 @@ function renderKwChips(){
   document.getElementById('kwChips').innerHTML = claudeHtml + userHtml;
   document.getElementById('kwChipLegend').style.display = userKws.length>0 ? '' : 'none';
 }
-// removeKw는 위에서 재정의됨
+function removeClaudeKw(i){claudeKws.splice(i,1);renderKwChips();}
+function removeUserKw(i){userKws.splice(i,1);renderKwChips();}
 function addKw(){
   const v=document.getElementById('addKwInput').value.trim();if(!v)return;
   userKws.push(v);document.getElementById('addKwInput').value='';renderKwChips();
