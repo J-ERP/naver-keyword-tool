@@ -230,7 +230,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 
 <script>
 let imageBase64='', imageType='', imageUrl='', inputMode='upload';
-let extractedKws=[], finalKws=[];
+let extractedKws=[], finalKws=[], finalKwsWithVol=[];
 let products=JSON.parse(localStorage.getItem('sourcing_products')||'[]');
 
 function setInputMode(mode) {
@@ -331,7 +331,14 @@ async function step4Filter(candidates) {
   try {
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter',keywords:extractedKws,candidates})});
     const data=await resp.json();
-    finalKws=data.keywords||[];
+    // items 형식 또는 keywords 형식 모두 지원
+    if(data.items) {
+      finalKwsWithVol=data.items;
+      finalKws=data.items.map(i=>i.keyword);
+    } else {
+      finalKws=data.keywords||[];
+      finalKwsWithVol=finalKws.map((k,i)=>({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0}));
+    }
     document.getElementById('s4status').textContent=`필터링 완료 → ${finalKws.length}개`;
     document.getElementById('s4num').className='step-num done';
     step5Result(finalKws);
@@ -375,24 +382,37 @@ async function step6Expand() {
         const kwData=await kwResp.json();
         const candidates=(kwData.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt})).sort((a,b)=>b.vol-a.vol);
 
-        // 확장 용도 필터링
+        // 확장 용도 필터링 - items 형식으로 반환
         const filterResp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter_expand',keywords:[usage.usage],candidates})});
         const filterData=await filterResp.json();
-        allExpandKws=allExpandKws.concat(filterData.keywords||[]);
+        // items 또는 keywords 형식 모두 지원
+        if(filterData.items) {
+          allExpandKws=allExpandKws.concat(filterData.items);
+        } else {
+          const kws=filterData.keywords||[];
+          allExpandKws=allExpandKws.concat(kws.map(k=>({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0})));
+        }
       } catch(e){}
     }
 
-    // 중복 제거 + 기존 키워드와 합치기
+    // 주 용도 + 확장 용도 검색량 기준 합쳐서 20개
     const existingSet=new Set(finalKws);
-    const newKws=allExpandKws.filter(k=>!existingSet.has(k));
-    const combined=[...finalKws,...newKws].slice(0,20);
+    // allExpandKws는 {keyword, vol} 형태
+    const newKwsWithVol=allExpandKws.filter(k=>!existingSet.has(k.keyword));
+    
+    // 전체 합치기 (주 용도 + 확장 용도)
+    const allCombined=[...finalKwsWithVol, ...newKwsWithVol];
+    // 검색량 순 정렬 후 20개
+    allCombined.sort((a,b)=>b.vol-a.vol);
+    const top20=allCombined.slice(0,20);
+    const combined=top20.map(i=>i.keyword);
+    const mainSet=new Set(finalKws);
 
     // 결과 표시
-    document.getElementById('s6status').textContent=`확장 용도 ${expanded.length}개 발견 → 총 ${combined.length}개 완성`;
+    document.getElementById('s6status').textContent=`확장 용도 ${expanded.length}개 발견 → 검색량 순 ${combined.length}개 완성`;
     document.getElementById('expandUsages').innerHTML=expanded.map(u=>`<span class="expand-usage">${u.usage}</span>`).join('');
     
-    // 색상 구분 인라인 텍스트 렌더링 (쉼표 구분, 확장 키워드만 보라색)
-    const mainSet = new Set(finalKws);
+    // 색상 구분 인라인 텍스트 (확장 키워드만 보라색)
     const spanHtml = combined.map((k,i) => {
       const comma = i < combined.length-1 ? '<span style="color:var(--text);">,</span>' : '';
       if(mainSet.has(k)) return `<span style="color:var(--text);">${k}</span>${comma}`;
