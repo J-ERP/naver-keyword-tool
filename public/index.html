@@ -19,7 +19,7 @@ body{font-family:-apple-system,'Pretendard',sans-serif;background:var(--bg);colo
 .panel{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.25rem;}
 .panel-title{font-size:11px;font-weight:600;color:var(--text-sec);letter-spacing:.07em;text-transform:uppercase;margin-bottom:1rem;}
 h1{font-size:16px;font-weight:600;margin-bottom:1.25rem;grid-column:1/-1;}
-input[type=text],textarea,select{width:100%;height:36px;padding:0 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);font-size:13px;color:var(--text);background:#fafafa;outline:none;font-family:inherit;}
+input[type=text],input[type=url],textarea,select{width:100%;height:36px;padding:0 10px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);font-size:13px;color:var(--text);background:#fafafa;outline:none;font-family:inherit;}
 input[type=text]:focus,textarea:focus{border-color:var(--accent);background:#fff;}
 textarea{height:auto;padding:8px 10px;resize:vertical;}
 .btn{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 14px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);background:#fff;color:var(--text);font-size:12px;cursor:pointer;white-space:nowrap;gap:4px;}
@@ -53,7 +53,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 .kw-chip button{background:none;border:none;cursor:pointer;color:var(--blue-text);font-size:14px;line-height:1;padding:0;}
 .result-box{background:#fafafa;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;line-height:1.9;word-break:break-all;min-height:44px;}
 .result-box.expand{background:var(--purple-bg);border-color:#c4b5fd;}
-.expand-usage{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#5b21b6;color:#fff;margin-right:4px;margin-bottom:4px;}
+.expand-usage{display:inline-flex;align-items:center;font-size:11px;padding:3px 10px;border-radius:999px;background:#5b21b6;color:#fff;margin:2px;border:none;cursor:default;-webkit-appearance:none;appearance:none;}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .status{font-size:12px;color:var(--text-sec);padding:6px 0;}
@@ -164,7 +164,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
         <div class="step-title">다용도 확장 분석</div>
         <div id="s6status" class="status"></div>
         <div id="step6Result" style="display:none;">
-          <div id="expandUsages" style="margin-bottom:8px;"></div>
+          <div id="expandUsages" style="display:none;"></div>
           <div class="result-box expand" id="expandResult"></div>
           <div class="row mt" style="justify-content:space-between;">
             <div style="font-size:11px;color:var(--text-sec);">주 용도 + 확장 용도 통합</div>
@@ -285,6 +285,7 @@ async function step1Analyze() {
       btn.innerHTML='분석 시작';btn.disabled=false;return;
     }
     extractedKws=data.keywords||[];
+    window._productName = extractedKws.slice(0,2).join(' '); // 상품명 후보
     document.getElementById('step2').style.display='';
     renderKwChips();
     document.getElementById('s1num').className='step-num done';
@@ -410,7 +411,7 @@ async function step6Expand() {
 
     // 결과 표시
     document.getElementById('s6status').textContent=`확장 용도 ${expanded.length}개 발견 → 검색량 순 ${combined.length}개 완성`;
-    document.getElementById('expandUsages').innerHTML=expanded.map(u=>`<span class="expand-usage">${u.usage}</span>`).join('');
+    // 확장 용도 태그 표시 안 함
     
     // 색상 구분 인라인 텍스트 (확장 키워드만 보라색)
     const spanHtml = combined.map((k,i) => {
@@ -434,6 +435,11 @@ function applyToForm(id){
   const el=document.getElementById(id);
   document.getElementById('formTags').value=el.dataset.raw||el.textContent;
   updateTagCount();
+  // 상품명 자동 완성 (비어있을 때만)
+  if(!document.getElementById('formName').value.trim() && window._productName) {
+    document.getElementById('formName').value=window._productName;
+    updateNameCount();
+  }
   document.getElementById('formTags').scrollIntoView({behavior:'smooth'});
 }
 function resetAll(){
