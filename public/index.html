@@ -325,7 +325,14 @@ async function step1Analyze() {
 }
 
 function renderKwChips(){
-  // renderKwChips는 위에서 재정의됨
+  const claudeHtml = claudeKws.map((k,i)=>
+    `<span class="kw-chip" style="background:var(--blue-bg);color:var(--blue-text);">${k}<button onclick="removeClaudeKw(${i})" style="color:var(--blue-text);">×</button></span>`
+  ).join('');
+  const userHtml = userKws.map((k,i)=>
+    `<span class="kw-chip" style="background:var(--green-bg);color:var(--green-text);">${k}<button onclick="removeUserKw(${i})" style="color:var(--green-text);">×</button></span>`
+  ).join('');
+  document.getElementById('kwChips').innerHTML = claudeHtml + userHtml;
+  document.getElementById('kwChipLegend').style.display = userKws.length>0 ? '' : 'none';
 }
 // removeKw는 위에서 재정의됨
 function addKw(){
