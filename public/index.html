@@ -325,14 +325,12 @@ async function step1Analyze() {
 }
 
 function renderKwChips(){
-  document.getElementById('kwChips').innerHTML=extractedKws.map((k,i)=>
-    `<span class="kw-chip">${k}<button onclick="removeKw(${i})">×</button></span>`
-  ).join('');
+  // renderKwChips는 위에서 재정의됨
 }
-function removeKw(i){extractedKws.splice(i,1);renderKwChips();}
+// removeKw는 위에서 재정의됨
 function addKw(){
   const v=document.getElementById('addKwInput').value.trim();if(!v)return;
-  extractedKws.push(v);document.getElementById('addKwInput').value='';renderKwChips();
+  userKws.push(v);document.getElementById('addKwInput').value='';renderKwChips();
 }
 document.getElementById('addKwInput').addEventListener('keydown',e=>{if(e.key==='Enter')addKw();});
 
