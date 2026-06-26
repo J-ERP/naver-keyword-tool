@@ -407,7 +407,7 @@ async function step6Expand() {
 
   try {
     // 확장 용도 분석
-    const expandResp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'expand',mainKeywords:getAllKws(),...getImageBody()})});
+    const expandResp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'expand',mainKeywords:getAllKws(),userKeywords:userKws,...getImageBody()})});
     const expandData=await expandResp.json();
     const expanded=expandData.expanded||[];
 
