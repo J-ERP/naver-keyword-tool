@@ -350,50 +350,85 @@ async function step3Search() {
   document.getElementById('step6').style.display='none';
   document.getElementById('s2num').className='step-num done';
   document.getElementById('s3num').className='step-num active';
-  document.getElementById('s3status').innerHTML='<span class="spinner"></span> 네이버 API 조회 중...';
+
   try {
-    // Claude 분석 + 사용자 추가 키워드 모두 힌트로 사용
-    const resp=await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:getAllKws()})});
-    const data=await resp.json();
-    const items=(data.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?'})).sort((a,b)=>b.vol-a.vol);
-    document.getElementById('s3status').textContent=`${items.length}개 키워드 수집 완료`;
+    let userCandidates = [];
+    let claudeCandidates = [];
+
+    if(userKws.length > 0) {
+      // 사용자 추가 키워드로 별도 조회
+      document.getElementById('s3status').innerHTML='<span class="spinner"></span> 추가 키워드 기반 조회 중...';
+      const r1 = await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:userKws})});
+      const d1 = await r1.json();
+      userCandidates = (d1.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?',source:'user'}));
+
+      // Claude 분석 키워드로 별도 조회
+      document.getElementById('s3status').innerHTML='<span class="spinner"></span> AI 분석 키워드 기반 조회 중...';
+      const r2 = await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:claudeKws})});
+      const d2 = await r2.json();
+      claudeCandidates = (d2.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?',source:'claude'}));
+
+      document.getElementById('s3status').textContent=`추가키워드 ${userCandidates.length}개 + AI분석 ${claudeCandidates.length}개 수집 완료`;
+    } else {
+      // 추가 키워드 없으면 Claude 분석 키워드만 조회
+      document.getElementById('s3status').innerHTML='<span class="spinner"></span> 네이버 API 조회 중...';
+      const r1 = await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:claudeKws})});
+      const d1 = await r1.json();
+      claudeCandidates = (d1.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?',source:'claude'}));
+      document.getElementById('s3status').textContent=`${claudeCandidates.length}개 키워드 수집 완료`;
+    }
+
     document.getElementById('s3num').className='step-num done';
-    await step4Filter(items);
+    await step4Filter(userCandidates, claudeCandidates);
   } catch(e){document.getElementById('s3status').textContent='오류: '+e.message;}
 }
 
-async function step4Filter(candidates) {
+async function step4Filter(userCandidates, claudeCandidates) {
   document.getElementById('step4').style.display='';
   document.getElementById('s4num').className='step-num active';
-  document.getElementById('s4status').innerHTML='<span class="spinner"></span> 브랜드/상표권/욕설 필터링 중...';
+  document.getElementById('s4status').innerHTML='<span class="spinner"></span> 키워드 선정 기준 적용 중...';
+  
+  // 전체 후보 합치기 (중복 제거, source 정보 유지)
+  const allMap = new Map();
+  // Claude 후보 먼저 (기본)
+  (claudeCandidates||[]).forEach(c => allMap.set(c.keyword, c));
+  // 사용자 후보 덮어쓰기 (source:'user' 우선)
+  (userCandidates||[]).forEach(c => allMap.set(c.keyword, c));
+  // 사용자 추가 키워드 자체도 후보에 추가
+  userKws.forEach(k => { if(!allMap.has(k)) allMap.set(k, {keyword:k,vol:0,compIdx:'?',source:'user'}); });
+  
+  const allCandidates = Array.from(allMap.values());
+
   try {
-    const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'filter',keywords:getAllKws(),userKeywords:userKws,candidates})});
-    // 사용자 키워드를 후보에 추가 (없으면 추가)
-    userKws.forEach(k=>{ if(!candidates.find(c=>c.keyword===k)) candidates.push({keyword:k,vol:0}); });
+    const resp=await fetch('/api/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        mode:'filter',
+        keywords:claudeKws,
+        userKeywords:userKws,
+        hasUserKeywords: userKws.length > 0,
+        candidates: allCandidates
+      })
+    });
     const data=await resp.json();
-    // items 형식 또는 keywords 형식 모두 지원
+
     if(data.items) {
       finalKwsWithVol=data.items;
       finalKws=data.items.map(i=>i.keyword);
     } else {
       finalKws=data.keywords||[];
-      finalKwsWithVol=finalKws.map((k,i)=>({keyword:k,vol:candidates.find(c=>c.keyword===k)?.vol||0}));
+      finalKwsWithVol=finalKws.map(k=>({keyword:k,vol:allMap.get(k)?.vol||0}));
     }
-    // 상품명 자동 완성 - 사용자 추가 키워드 있으면 Claude 추천 상품명 사용
+
+    // 상품명 자동 완성
     if(data.productName) {
       window._productName = data.productName;
     } else if(userKws.length > 0) {
-      window._productName = userKws.slice(0,3).join(' ');
+      window._productName = userKws.slice(0,2).join(' ');
     }
-    // 사용자 추가 키워드 누락 시 강제 포함
-    const userKwSet=new Set(finalKws);
-    userKws.forEach(k=>{
-      if(!userKwSet.has(k)){
-        finalKws.push(k);
-        finalKwsWithVol.push({keyword:k,vol:0});
-      }
-    });
-    document.getElementById('s4status').textContent=`필터링 완료 → ${finalKws.length}개`;
+
+    document.getElementById('s4status').textContent=`선정 완료 → ${finalKws.length}개`;
     document.getElementById('s4num').className='step-num done';
     step5Result(finalKws);
   } catch(e){document.getElementById('s4status').textContent='오류: '+e.message;}
