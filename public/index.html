@@ -351,30 +351,30 @@ async function step3Search() {
   document.getElementById('s2num').className='step-num done';
   document.getElementById('s3num').className='step-num active';
 
-  try {
-    let userCandidates = [];
-    let claudeCandidates = [];
+  let userCandidates = [];
+  let claudeCandidates = [];
 
+  try {
     if(userKws.length > 0) {
-      // 사용자 추가 키워드로 별도 조회
+      // ① 사용자 추가 키워드로 조회
       document.getElementById('s3status').innerHTML='<span class="spinner"></span> 추가 키워드 기반 조회 중...';
       const r1 = await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:userKws})});
       const d1 = await r1.json();
-      userCandidates = (d1.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?',source:'user'}));
+      userCandidates = (d1.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?'}));
 
-      // Claude 분석 키워드로 별도 조회
+      // ② Claude 분석 키워드로 조회
       document.getElementById('s3status').innerHTML='<span class="spinner"></span> AI 분석 키워드 기반 조회 중...';
       const r2 = await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:claudeKws})});
       const d2 = await r2.json();
-      claudeCandidates = (d2.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?',source:'claude'}));
+      claudeCandidates = (d2.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?'}));
 
       document.getElementById('s3status').textContent=`추가키워드 ${userCandidates.length}개 + AI분석 ${claudeCandidates.length}개 수집 완료`;
     } else {
-      // 추가 키워드 없으면 Claude 분석 키워드만 조회
+      // 추가 키워드 없으면 Claude 분석 키워드만
       document.getElementById('s3status').innerHTML='<span class="spinner"></span> 네이버 API 조회 중...';
       const r1 = await fetch('/api/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keywords:claudeKws})});
       const d1 = await r1.json();
-      claudeCandidates = (d1.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?',source:'claude'}));
+      claudeCandidates = (d1.keywordList||[]).map(r=>({keyword:r.relKeyword,vol:r.monthlyPcQcCnt+r.monthlyMobileQcCnt,compIdx:r.compIdx||'?'}));
       document.getElementById('s3status').textContent=`${claudeCandidates.length}개 키워드 수집 완료`;
     }
 
@@ -386,47 +386,29 @@ async function step3Search() {
 async function step4Filter(userCandidates, claudeCandidates) {
   document.getElementById('step4').style.display='';
   document.getElementById('s4num').className='step-num active';
-  document.getElementById('s4status').innerHTML='<span class="spinner"></span> 키워드 선정 기준 적용 중...';
-  
-  // 전체 후보 합치기 (중복 제거, source 정보 유지)
-  const allMap = new Map();
-  // Claude 후보 먼저 (기본)
-  (claudeCandidates||[]).forEach(c => allMap.set(c.keyword, c));
-  // 사용자 후보 덮어쓰기 (source:'user' 우선)
-  (userCandidates||[]).forEach(c => allMap.set(c.keyword, c));
-  // 사용자 추가 키워드 자체도 후보에 추가
-  userKws.forEach(k => { if(!allMap.has(k)) allMap.set(k, {keyword:k,vol:0,compIdx:'?',source:'user'}); });
-  
-  const allCandidates = Array.from(allMap.values());
-
+  document.getElementById('s4status').innerHTML='<span class="spinner"></span> md 기준 키워드 선정 중...';
   try {
-    const resp=await fetch('/api/analyze',{
+    const resp = await fetch('/api/analyze',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         mode:'filter',
-        keywords:claudeKws,
-        userKeywords:userKws,
-        hasUserKeywords: userKws.length > 0,
-        candidates: allCandidates
+        userKeywords: userKws,
+        claudeKeywords: claudeKws,
+        userCandidates: userCandidates,
+        claudeCandidates: claudeCandidates
       })
     });
-    const data=await resp.json();
+    const data = await resp.json();
 
-    if(data.items) {
-      finalKwsWithVol=data.items;
-      finalKws=data.items.map(i=>i.keyword);
-    } else {
-      finalKws=data.keywords||[];
-      finalKwsWithVol=finalKws.map(k=>({keyword:k,vol:allMap.get(k)?.vol||0}));
-    }
+    finalKws = (data.keywords||[]);
+    finalKwsWithVol = finalKws.map(k => {
+      const found = [...(userCandidates||[]), ...(claudeCandidates||[])].find(c=>c.keyword===k);
+      return {keyword:k, vol:found?.vol||0};
+    });
 
-    // 상품명 자동 완성
-    if(data.productName) {
-      window._productName = data.productName;
-    } else if(userKws.length > 0) {
-      window._productName = userKws.slice(0,2).join(' ');
-    }
+    if(data.productName) window._productName = data.productName;
+    else if(userKws.length>0) window._productName = userKws.slice(0,2).join(' ');
 
     document.getElementById('s4status').textContent=`선정 완료 → ${finalKws.length}개`;
     document.getElementById('s4num').className='step-num done';
