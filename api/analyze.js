@@ -144,8 +144,9 @@ ${cCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
 4. 상품과 무관한 키워드 제외
 5. 관련 키워드가 20개 미만이면 모자라도 됨
 
-JSON만 반환. 예: {"keywords":["키워드1","키워드2"], "productName":"추천상품명"}`;
-      }
+JSON만 반환. 예: {"keywords":["키워드1","키워드2"], "productName":"추천상품명"}
+상품명 기준: AI분석 핵심키워드 1~2개 + 힌트키워드 1~2개 조합. 예) AI=안전조끼, 힌트=도로공사 → "안전조끼 형광 도로공사용". 50자 이내, 브랜드명 제외.`;
+ }
 
       const parsed = await callClaude(KEY, prompt);
 
