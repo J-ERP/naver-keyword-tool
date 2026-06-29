@@ -106,6 +106,11 @@ export default async function handler(req, res) {
       const uCands = (userCandidates||[]).filter(c => isOk(c.keyword));
       const cCands = (claudeCandidates||[]).filter(c => isOk(c.keyword));
 
+      // ✅ 후보가 둘 다 비어있으면 빈 결과 반환 (500 방지)
+      if (uCands.length === 0 && cCands.length === 0) {
+        return res.status(200).json({ keywords: [], productName: '' });
+      }
+
       let prompt;
 
       if (hasUser) {
@@ -132,10 +137,11 @@ ${cCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
 
 JSON만 반환. 예: {"keywords":["키워드1","키워드2"], "productName":"추천상품명"}`;
       } else {
+        // ✅ 초록칩 없을 때: cCands가 비어있어도 안전하게 처리
         prompt = `너는 네이버 쇼핑 키워드 전문가야. 소량다품종 판매자를 위한 태그 키워드 최대 20개를 선정해줘.
 
 [AI 분석 키워드 기반 네이버 조회 결과] (키워드,검색량,경쟁도)
-${cCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
+${cCands.length > 0 ? cCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n') : '(조회 결과 없음)'}
 
 선정 규칙:
 1. 제외: 정보성(사용법/후기/비교/~이란/~뜻), 브랜드명, 욕설, 유아/키즈, 의료기기, 식약처인증, KS/KC인증 관련
@@ -143,10 +149,11 @@ ${cCands.map(c=>`${c.keyword},${c.vol},${c.compIdx}`).join('\n')}
 3. 같은 경쟁도면 검색량 높은 순
 4. 상품과 무관한 키워드 제외
 5. 관련 키워드가 20개 미만이면 모자라도 됨
+6. 조회 결과가 없으면 keywords를 빈 배열로 반환
 
 JSON만 반환. 예: {"keywords":["키워드1","키워드2"], "productName":"추천상품명"}
-상품명 기준: AI분석 핵심키워드 1~2개 + 힌트키워드 1~2개 조합. 예) AI=안전조끼, 힌트=도로공사 → "안전조끼 형광 도로공사용". 50자 이내, 브랜드명 제외.`;
- }
+상품명 기준: AI분석 핵심키워드 1~2개 조합. 50자 이내, 브랜드명 제외.`;
+      }
 
       const parsed = await callClaude(KEY, prompt);
 
