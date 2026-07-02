@@ -754,15 +754,20 @@ function toggleMasterCard(idx) {
 
   // 링크 3개
   const linkItems = [
-    { label: '📦 발주링크', val: p.order_link },
-    { label: '🖼 이미지링크', val: p.image_link }
+    { label: '📦 발주링크', val: p.order_link, key: 'order_link' },
+    { label: '🖼 이미지링크', val: p.image_link, key: 'image_link' }
   ];
-  const linksHtml = linkItems.filter(l => l.val).map(l =>
-    `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
-      <span style="color:#5b21b6;white-space:nowrap;font-size:11px;">${l.label}:</span>
-      <a href="${l.val}" target="_blank" style="color:#1e40af;font-size:10px;text-decoration:underline;flex:1;word-break:break-all;">${l.val}</a>
-      <button onclick="event.stopPropagation();copyText('${l.val.replace(/'/g,"\\'").replace(/"/g,"&quot;")}',this)" style="font-size:10px;padding:1px 5px;border:0.5px solid #c4b5fd;border-radius:3px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
-    </div>`
+  const linksHtml = linkItems.map(l =>
+    l.val
+      ? `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+          <span style="color:#5b21b6;white-space:nowrap;font-size:11px;">${l.label}:</span>
+          <a href="${l.val}" target="_blank" style="color:#1e40af;font-size:10px;text-decoration:underline;flex:1;word-break:break-all;">${l.val}</a>
+          <button onclick="copyText(l.val,this)" style="font-size:10px;padding:1px 5px;border:0.5px solid #c4b5fd;border-radius:3px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
+        </div>`
+      : `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+          <span style="color:#5b21b6;white-space:nowrap;font-size:11px;">${l.label}:</span>
+          <span style="font-size:11px;color:var(--text-hint);">없음</span>
+        </div>`
   ).join('');
 
 
@@ -800,6 +805,7 @@ function cancelMasterPreview() {
 // 그대로 저장: products에 저장 + master에서 삭제
 async function masterUseAsIs() {
   if (!masterSelected) return;
+  if (!confirm('소싱 DB에서 삭제 후 저장됩니다. 계속하시겠습니까?')) return;
   const name = masterSelected.product_name;
   const tags = masterSelected.keywords || '';
   await saveMasterToProducts(name, tags);
@@ -808,11 +814,11 @@ async function masterUseAsIs() {
 // 수동 수정 후 저장: 폼에 채워주고 사용자가 수정 후 저장
 function masterEditManual() {
   if (!masterSelected) return;
+  if (!confirm('폼에 데이터를 불러옵니다. 저장 시 소싱 DB에서 삭제됩니다. 계속하시겠습니까?')) return;
   document.getElementById('formName').value = masterSelected.product_name;
   document.getElementById('formTags').value = masterSelected.keywords || '';
   document.getElementById('editId').value = '';
   updateNameCount(); updateTagCount();
-  // master에서는 저장 버튼 누를 때 삭제 - masterId 임시 저장
   window._pendingMasterId = masterSelected.id;
   cancelMasterPreview();
   document.getElementById('masterSearchInput').value = '';
