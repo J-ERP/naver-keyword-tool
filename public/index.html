@@ -712,29 +712,27 @@ async function searchMaster() {
       wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);padding:6px 0;">검색 결과 없음</div>';
       return;
     }
-    wrap.innerHTML = data.slice(0, 7).map((p, i) => {
-      const safeKw = (p.keywords||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-      const safeP = JSON.stringify(JSON.stringify(p));
-      return `<div class="search-item" id="mcard-${i}" style="cursor:default;">
+    window.masterData = data.slice(0, 7);
+    wrap.innerHTML = window.masterData.map((p, i) =>
+      `<div class="search-item" id="mcard-${i}" style="cursor:default;">
         <div class="name" style="margin-bottom:4px;">${p.product_name}</div>
         <div style="position:relative;padding-right:48px;">
           <div class="tags" style="font-size:11px;line-height:1.7;word-break:break-all;">${p.keywords||'-'}</div>
-          <button onclick="copyText(document.getElementById('mkw-${i}').textContent,this)" style="position:absolute;top:0;right:0;font-size:10px;padding:2px 7px;border:0.5px solid #c4b5fd;border-radius:4px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
-          <span id="mkw-${i}" style="display:none;">${p.keywords||''}</span>
+          <button onclick="copyText(window.masterData[${i}].keywords||'',this)" style="position:absolute;top:0;right:0;font-size:10px;padding:2px 7px;border:0.5px solid #c4b5fd;border-radius:4px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
         </div>
         <div style="text-align:right;margin-top:6px;">
-          <button onclick="toggleMasterCard(${i}, ${safeP})" id="mcard-btn-${i}" style="font-size:11px;padding:3px 10px;border:0.5px solid var(--border-md);border-radius:4px;background:#fff;cursor:pointer;color:var(--text-sec);">🔗 링크 보기 ▼</button>
+          <button onclick="toggleMasterCard(${i})" id="mcard-btn-${i}" style="font-size:11px;padding:3px 10px;border:0.5px solid var(--border-md);border-radius:4px;background:#fff;cursor:pointer;color:var(--text-sec);">🔗 링크 보기 ▼</button>
         </div>
         <div id="mcard-detail-${i}" style="display:none;margin-top:8px;border-top:0.5px solid #c4b5fd;padding-top:8px;"></div>
-      </div>`;
-    }).join('');
+      </div>`
+    ).join('');
   } catch(e) {
     wrap.innerHTML = '<div style="font-size:12px;color:#991b1b;">오류: ' + e.message + '</div>';
   }
 }
 
-function toggleMasterCard(idx, jsonStr) {
-  const p = JSON.parse(jsonStr);
+function toggleMasterCard(idx) {
+  const p = window.masterData[idx];
   const detail = document.getElementById(`mcard-detail-${idx}`);
   const isOpen = detail.style.display !== 'none';
 
