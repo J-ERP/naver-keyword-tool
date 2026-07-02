@@ -164,6 +164,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
           <button class="btn sm danger" onclick="resetFrom(5)">↺ 4단계로</button>
           <div class="row">
             <button class="btn sm" onclick="copyResult('finalResult')">복사</button>
+            <button class="btn sm primary" onclick="applyToForm('finalResult')">상품 등록에 적용 ↓</button>
             <button class="btn sm purple" onclick="step6Expand()">다용도 확장 분석 ▶</button>
           </div>
         </div>
@@ -189,9 +190,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
               <button class="btn sm primary" onclick="applyToForm('expandResult')">상품 등록에 적용 ↓</button>
             </div>
           </div>
-          <div class="divider"></div>
-          <div style="font-size:11px;color:var(--text-sec);margin-bottom:4px;">주 용도 태그만 적용하려면:</div>
-          <button class="btn sm" onclick="applyToForm('finalResult')" style="width:100%;">주 용도만 적용 ↓</button>
+
         </div>
       </div>
     </div>
