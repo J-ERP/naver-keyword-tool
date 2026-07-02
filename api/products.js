@@ -13,7 +13,34 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const isMaster = req.query.master === '1';
+
   try {
+
+    // ── products_master 검색 (GET ?master=1&q=검색어) ──────────────
+    if (isMaster && req.method === 'GET') {
+      const q = req.query.q || '';
+      if (!q) return res.status(200).json([]);
+      const encoded = encodeURIComponent(`%${q}%`);
+      const resp = await fetch(
+        `${SUPABASE_URL}/rest/v1/products_master?product_name=ilike.${encoded}&select=id,product_name,keywords,image_link&order=product_name.asc&limit=10`,
+        { headers }
+      );
+      const data = await resp.json();
+      return res.status(200).json(data);
+    }
+
+    // ── products_master 삭제 (DELETE ?master=1&id=xxx) ─────────────
+    if (isMaster && req.method === 'DELETE') {
+      const { id } = req.query;
+      await fetch(`${SUPABASE_URL}/rest/v1/products_master?id=eq.${id}`, {
+        method: 'DELETE',
+        headers
+      });
+      return res.status(200).json({ success: true });
+    }
+
+    // ── 기존 products CRUD ─────────────────────────────────────────
     if (req.method === 'GET') {
       const resp = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=created_at.asc`, { headers });
       const data = await resp.json();
@@ -47,6 +74,7 @@ export default async function handler(req, res) {
       });
       return res.status(200).json({ success: true });
     }
+
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }

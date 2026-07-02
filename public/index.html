@@ -203,6 +203,29 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 
   <!-- 오른쪽 -->
   <div style="display:flex;flex-direction:column;gap:1rem;">
+
+    <!-- 엑셀 DB 검색 패널 -->
+    <div class="panel" style="border:1px solid #c4b5fd;">
+      <div class="panel-title" style="color:#5b21b6;">📦 소싱 DB 검색 (엑셀 원본)</div>
+      <div class="row" style="gap:6px;">
+        <input type="text" id="masterSearchInput" placeholder="상품명으로 검색..." oninput="searchMaster()"/>
+      </div>
+      <div id="masterResults" style="margin-top:10px;"></div>
+
+      <!-- 선택된 상품 미리보기 -->
+      <div id="masterPreview" style="display:none;margin-top:10px;padding:10px;background:#faf5ff;border:0.5px solid #c4b5fd;border-radius:var(--radius-sm);">
+        <div style="font-size:11px;color:#5b21b6;font-weight:600;margin-bottom:6px;">선택된 상품</div>
+        <div id="masterPreviewName" style="font-size:13px;font-weight:500;margin-bottom:4px;"></div>
+        <div id="masterPreviewTags" style="font-size:11px;color:var(--text-sec);margin-bottom:10px;line-height:1.6;"></div>
+        <div class="row" style="gap:6px;">
+          <button class="btn sm" onclick="masterUseAsIs()" style="flex:1;background:#5b21b6;color:#fff;border-color:#5b21b6;">그대로 저장</button>
+          <button class="btn sm" onclick="masterEditManual()" style="flex:1;">수동 수정 후 저장</button>
+          <button class="btn sm" onclick="masterRunAI()" style="flex:1;background:#1a1a1a;color:#fff;">AI 새로 돌리기</button>
+        </div>
+        <button class="btn sm danger" onclick="cancelMasterPreview()" style="width:100%;margin-top:6px;">취소</button>
+      </div>
+    </div>
+
     <div class="panel">
       <div class="panel-title">이전 상품 검색 (재사용)</div>
       <input type="text" id="searchInput" placeholder="상품명 또는 태그키워드로 검색..." oninput="searchProducts()"/>
@@ -680,6 +703,126 @@ function exportCSV(){
   a.download=`소싱키워드_${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }
 loadProducts();
+
+// ── products_master 검색 ──────────────────────────────────────────
+const SUPA_URL = 'https://' + location.hostname.replace('naver-keyword-tool-nine.vercel.app','') + '';
+let masterSelected = null;
+
+async function searchMaster() {
+  const q = document.getElementById('masterSearchInput').value.trim();
+  const wrap = document.getElementById('masterResults');
+  cancelMasterPreview();
+  if (q.length < 2) { wrap.innerHTML = ''; return; }
+
+  wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);">검색 중...</div>';
+
+  try {
+    const resp = await fetch('/api/products?master=1&q=' + encodeURIComponent(q));
+    const data = await resp.json();
+    if (!data.length) {
+      wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);padding:6px 0;">검색 결과 없음</div>';
+      return;
+    }
+    wrap.innerHTML = data.slice(0, 7).map(p =>
+      `<div class="search-item" onclick="selectMaster(${JSON.stringify(JSON.stringify(p))})">
+        <div class="name">${p.product_name}</div>
+        <div class="tags">${(p.keywords||'').slice(0,60)}${(p.keywords||'').length>60?'...':''}</div>
+      </div>`
+    ).join('');
+  } catch(e) {
+    wrap.innerHTML = '<div style="font-size:12px;color:#991b1b;">오류: ' + e.message + '</div>';
+  }
+}
+
+function selectMaster(jsonStr) {
+  const p = JSON.parse(jsonStr);
+  masterSelected = p;
+  document.getElementById('masterResults').innerHTML = '';
+  document.getElementById('masterPreviewName').textContent = p.product_name;
+  document.getElementById('masterPreviewTags').textContent = p.keywords || '-';
+  document.getElementById('masterPreview').style.display = '';
+}
+
+function cancelMasterPreview() {
+  masterSelected = null;
+  document.getElementById('masterPreview').style.display = 'none';
+}
+
+// 그대로 저장: products에 저장 + master에서 삭제
+async function masterUseAsIs() {
+  if (!masterSelected) return;
+  const name = masterSelected.product_name;
+  const tags = masterSelected.keywords || '';
+  await saveMasterToProducts(name, tags);
+}
+
+// 수동 수정 후 저장: 폼에 채워주고 사용자가 수정 후 저장
+function masterEditManual() {
+  if (!masterSelected) return;
+  document.getElementById('formName').value = masterSelected.product_name;
+  document.getElementById('formTags').value = masterSelected.keywords || '';
+  document.getElementById('editId').value = '';
+  updateNameCount(); updateTagCount();
+  // master에서는 저장 버튼 누를 때 삭제 - masterId 임시 저장
+  window._pendingMasterId = masterSelected.id;
+  cancelMasterPreview();
+  document.getElementById('masterSearchInput').value = '';
+  document.getElementById('formName').scrollIntoView({ behavior: 'smooth' });
+  alert('수정 후 저장 버튼을 누르세요. 저장 시 소싱 DB에서 자동 삭제됩니다.');
+}
+
+// AI 새로 돌리기: 이미지 링크로 분석 시작
+async function masterRunAI() {
+  if (!masterSelected) return;
+  const imageLink = masterSelected.image_link;
+  window._pendingMasterId = masterSelected.id;
+  cancelMasterPreview();
+  document.getElementById('masterSearchInput').value = '';
+
+  if (imageLink) {
+    // URL 모드로 전환 후 이미지 링크 입력
+    setInputMode('url');
+    document.getElementById('urlInput').value = imageLink;
+    alert('이미지가 입력됐습니다. "분석 시작" 버튼을 눌러주세요.\n저장 시 소싱 DB에서 자동 삭제됩니다.');
+  } else {
+    alert('이미지 링크가 없습니다. 직접 이미지를 업로드해주세요.\n저장 시 소싱 DB에서 자동 삭제됩니다.');
+  }
+  window.scrollTo(0, 0);
+}
+
+async function saveMasterToProducts(name, tags) {
+  if (!masterSelected && !window._pendingMasterId) return;
+  const masterId = masterSelected?.id || window._pendingMasterId;
+
+  const newP = { id: Date.now().toString(), name, tags, active: true, created_at: new Date().toISOString() };
+  products.push(newP);
+  await persist('add', newP);
+
+  // master에서 삭제
+  try {
+    await fetch('/api/products?master=1&id=' + masterId, { method: 'DELETE' });
+  } catch(e) { console.error('master 삭제 오류:', e); }
+
+  masterSelected = null;
+  window._pendingMasterId = null;
+  cancelMasterPreview();
+  document.getElementById('masterSearchInput').value = '';
+  renderProducts();
+  alert('저장 완료! 소싱 DB에서 삭제됐습니다.');
+}
+
+// 기존 saveProduct 오버라이드: master 대기 중이면 master도 삭제
+const _origSaveProduct = saveProduct;
+async function saveProduct() {
+  await _origSaveProduct();
+  if (window._pendingMasterId) {
+    try {
+      await fetch('/api/products?master=1&id=' + window._pendingMasterId, { method: 'DELETE' });
+    } catch(e) { console.error('master 삭제 오류:', e); }
+    window._pendingMasterId = null;
+    alert('소싱 DB에서도 삭제됐습니다.');
+  }
+}
 </script>
 </body>
 </html>
