@@ -752,23 +752,27 @@ function toggleMasterCard(idx) {
   detail.style.display = '';
   detail.closest('.search-item').style.background = '#faf5ff';
 
-  // 링크 3개
+  // 링크 2개
   const linkItems = [
-    { label: '📦 발주링크', val: p.order_link, key: 'order_link' },
-    { label: '🖼 이미지링크', val: p.image_link, key: 'image_link' }
+    { label: '📦 발주링크', val: p.order_link },
+    { label: '🖼 이미지링크', val: p.image_link }
   ];
-  const linksHtml = linkItems.map(l =>
-    l.val
-      ? `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
-          <span style="color:#5b21b6;white-space:nowrap;font-size:11px;">${l.label}:</span>
-          <a href="${l.val}" target="_blank" style="color:#1e40af;font-size:10px;text-decoration:underline;flex:1;word-break:break-all;">${l.val}</a>
-          <button onclick="copyText(l.val,this)" style="font-size:10px;padding:1px 5px;border:0.5px solid #c4b5fd;border-radius:3px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
-        </div>`
-      : `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
-          <span style="color:#5b21b6;white-space:nowrap;font-size:11px;">${l.label}:</span>
-          <span style="font-size:11px;color:var(--text-hint);">없음</span>
-        </div>`
-  ).join('');
+  const linksHtml = linkItems.map(l => {
+    if (l.val && l.val !== '#N/A') {
+      const safe = l.val.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      return `<div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:5px;">
+        <span style="color:#5b21b6;white-space:nowrap;font-size:11px;padding-top:1px;">${l.label}:</span>
+        <a href="${safe}" target="_blank" style="color:#1e40af;font-size:10px;text-decoration:underline;flex:1;word-break:break-all;line-height:1.5;">${safe}</a>
+        <button data-copy="${safe}" onclick="copyText(this.dataset.copy,this)" style="flex-shrink:0;font-size:10px;padding:1px 5px;border:0.5px solid #c4b5fd;border-radius:3px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
+      </div>`;
+    } else {
+      return `<div style="display:flex;align-items:center;gap:4px;margin-bottom:5px;">
+        <span style="color:#5b21b6;white-space:nowrap;font-size:11px;">${l.label}:</span>
+        <span style="font-size:11px;color:var(--text-hint);">없음</span>
+      </div>`;
+    }
+  }).join('');
+
 
 
   // 버튼 3개
@@ -828,18 +832,17 @@ function masterEditManual() {
 // AI 새로 돌리기: 이미지 링크로 분석 시작
 async function masterRunAI() {
   if (!masterSelected) return;
+  if (!confirm('AI 재분석을 시작합니다. 저장 시 소싱 DB에서 삭제됩니다. 계속하시겠습니까?')) return;
   const imageLink = masterSelected.image_link;
   window._pendingMasterId = masterSelected.id;
   cancelMasterPreview();
   document.getElementById('masterSearchInput').value = '';
 
-  if (imageLink) {
-    // URL 모드로 전환 후 이미지 링크 입력
+  if (imageLink && imageLink !== '#N/A') {
     setInputMode('url');
     document.getElementById('urlInput').value = imageLink;
-    alert('이미지가 입력됐습니다. "분석 시작" 버튼을 눌러주세요.\n저장 시 소싱 DB에서 자동 삭제됩니다.');
   } else {
-    alert('이미지 링크가 없습니다. 직접 이미지를 업로드해주세요.\n저장 시 소싱 DB에서 자동 삭제됩니다.');
+    alert('이미지 링크가 없습니다. 직접 이미지를 업로드해주세요.');
   }
   window.scrollTo(0, 0);
 }
