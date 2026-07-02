@@ -88,6 +88,7 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
         <div class="input-tabs">
           <button class="input-tab active" onclick="setInputMode('upload')">이미지 업로드</button>
           <button class="input-tab" onclick="setInputMode('url')">URL 입력</button>
+          <button class="input-tab" onclick="setInputMode('keyword')">키워드 입력</button>
         </div>
         <div id="modeUpload">
           <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
@@ -100,6 +101,10 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
             <input type="text" id="urlInput" placeholder="상품 이미지 URL 붙여넣기..."/>
           </div>
           <div id="urlWarn" style="display:none;font-size:11px;color:#92400e;background:var(--yellow-bg);padding:6px 10px;border-radius:var(--radius-sm);margin-top:6px;"></div>
+        </div>
+        <div id="modeKeyword" style="display:none;">
+          <textarea id="keywordInput" rows="3" placeholder="키워드를 쉼표로 구분해서 붙여넣기...&#10;예: 타로카드,패브릭포스터,가림막커튼"></textarea>
+          <div style="font-size:11px;color:var(--text-sec);margin-top:4px;">이미지 분석 없이 입력한 키워드로 바로 네이버 조회합니다.</div>
         </div>
         <div class="mt" style="text-align:right;">
           <button class="btn primary" onclick="step1Analyze()" id="btnAnalyze">분석 시작</button>
@@ -276,10 +281,16 @@ async function loadProducts(){
 
 function setInputMode(mode) {
   inputMode=mode;
-  document.querySelectorAll('.input-tab').forEach((t,i)=>t.classList.toggle('active',(mode==='upload')===(i===0)));
+  document.querySelectorAll('.input-tab').forEach((t,i)=>{
+    t.classList.toggle('active',
+      (mode==='upload'&&i===0)||(mode==='url'&&i===1)||(mode==='keyword'&&i===2)
+    );
+  });
   document.getElementById('modeUpload').style.display=mode==='upload'?'':'none';
   document.getElementById('modeUrl').style.display=mode==='url'?'':'none';
+  document.getElementById('modeKeyword').style.display=mode==='keyword'?'':'none';
   document.getElementById('urlInput').value='';
+  document.getElementById('keywordInput').value='';
   document.getElementById('urlWarn').style.display='none';
   if(mode==='upload'){imageBase64='';imageType='';document.getElementById('uploadContent').textContent='클릭 또는 드래그해서 이미지 업로드';document.getElementById('fileInput').value='';}
 }
@@ -316,6 +327,20 @@ async function step1Analyze() {
 
   if(inputMode==='upload'&&!imageBase64){alert('이미지를 업로드해주세요');btn.innerHTML='분석 시작';btn.disabled=false;return;}
   if(inputMode==='url'&&!document.getElementById('urlInput').value.trim()){alert('URL을 입력해주세요');btn.innerHTML='분석 시작';btn.disabled=false;return;}
+
+  // 키워드 직접 입력 모드: 이미지 분석 없이 바로 2단계로
+  if(inputMode==='keyword'){
+    const kwText=document.getElementById('keywordInput').value.trim();
+    if(!kwText){alert('키워드를 입력해주세요');btn.innerHTML='분석 시작';btn.disabled=false;return;}
+    claudeKws=kwText.split(',').map(k=>k.trim()).filter(Boolean);
+    userKws=[];
+    document.getElementById('step2').style.display='';
+    renderKwChips();
+    document.getElementById('s1num').className='step-num done';
+    document.getElementById('s2num').className='step-num active';
+    btn.innerHTML='분석 시작';btn.disabled=false;
+    return;
+  }
 
   try {
     const resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'analyze',...getImageBody()})});
