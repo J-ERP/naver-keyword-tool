@@ -212,18 +212,8 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
       </div>
       <div id="masterResults" style="margin-top:10px;"></div>
 
-      <!-- 선택된 상품 미리보기 -->
-      <div id="masterPreview" style="display:none;margin-top:10px;padding:10px;background:#faf5ff;border:0.5px solid #c4b5fd;border-radius:var(--radius-sm);">
-        <div style="font-size:11px;color:#5b21b6;font-weight:600;margin-bottom:6px;">선택된 상품</div>
-        <div id="masterPreviewName" style="font-size:13px;font-weight:500;margin-bottom:4px;"></div>
-        <div id="masterPreviewTags" style="font-size:11px;color:var(--text-sec);margin-bottom:10px;line-height:1.6;"></div>
-        <div class="row" style="gap:6px;">
-          <button class="btn sm" onclick="masterUseAsIs()" style="flex:1;background:#5b21b6;color:#fff;border-color:#5b21b6;">그대로 저장</button>
-          <button class="btn sm" onclick="masterEditManual()" style="flex:1;">수동 수정 후 저장</button>
-          <button class="btn sm" onclick="masterRunAI()" style="flex:1;background:#1a1a1a;color:#fff;">AI 새로 돌리기</button>
-        </div>
-        <button class="btn sm danger" onclick="cancelMasterPreview()" style="width:100%;margin-top:6px;">취소</button>
-      </div>
+      <!-- 아코디언 카드 방식 - 별도 미리보기 없음 -->
+
     </div>
 
     <div class="panel">
@@ -705,13 +695,12 @@ function exportCSV(){
 loadProducts();
 
 // ── products_master 검색 ──────────────────────────────────────────
-const SUPA_URL = 'https://' + location.hostname.replace('naver-keyword-tool-nine.vercel.app','') + '';
 let masterSelected = null;
 
 async function searchMaster() {
   const q = document.getElementById('masterSearchInput').value.trim();
   const wrap = document.getElementById('masterResults');
-  cancelMasterPreview();
+  masterSelected = null;
   if (q.length < 2) { wrap.innerHTML = ''; return; }
 
   wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);">검색 중...</div>';
@@ -723,10 +712,11 @@ async function searchMaster() {
       wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);padding:6px 0;">검색 결과 없음</div>';
       return;
     }
-    wrap.innerHTML = data.slice(0, 7).map(p =>
-      `<div class="search-item" onclick="selectMaster(${JSON.stringify(JSON.stringify(p))})">
+    wrap.innerHTML = data.slice(0, 7).map((p, i) =>
+      `<div class="search-item" id="mcard-${i}" style="cursor:pointer;" onclick="toggleMasterCard(${i}, ${JSON.stringify(JSON.stringify(p))})">
         <div class="name">${p.product_name}</div>
-        <div class="tags">${(p.keywords||'').slice(0,60)}${(p.keywords||'').length>60?'...':''}</div>
+        <div class="tags" style="margin-top:3px;">${(p.keywords||'').slice(0,50)}${(p.keywords||'').length>50?'...':''}</div>
+        <div id="mcard-detail-${i}" style="display:none;margin-top:10px;border-top:0.5px solid #c4b5fd;padding-top:10px;"></div>
       </div>`
     ).join('');
   } catch(e) {
@@ -734,13 +724,71 @@ async function searchMaster() {
   }
 }
 
-function selectMaster(jsonStr) {
+function toggleMasterCard(idx, jsonStr) {
   const p = JSON.parse(jsonStr);
+  const detail = document.getElementById(`mcard-detail-${idx}`);
+  const isOpen = detail.style.display !== 'none';
+
+  // 모든 카드 닫기
+  document.querySelectorAll('[id^="mcard-detail-"]').forEach(el => {
+    el.style.display = 'none';
+    el.closest('.search-item').style.background = '';
+  });
+
+  if (isOpen) { masterSelected = null; return; }
+
+  // 선택된 카드 열기
   masterSelected = p;
-  document.getElementById('masterResults').innerHTML = '';
-  document.getElementById('masterPreviewName').textContent = p.product_name;
-  document.getElementById('masterPreviewTags').textContent = p.keywords || '-';
-  document.getElementById('masterPreview').style.display = '';
+  detail.style.display = '';
+  detail.closest('.search-item').style.background = '#faf5ff';
+
+  // 링크 3개
+  const linkItems = [
+    { label: '🔗 상품링크', val: p.link },
+    { label: '📦 발주링크', val: p.order_link },
+    { label: '🖼 이미지링크', val: p.image_link }
+  ];
+  const linksHtml = linkItems.filter(l => l.val).map(l =>
+    `<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">
+      <span style="color:#5b21b6;white-space:nowrap;font-size:11px;">${l.label}:</span>
+      <a href="${l.val}" target="_blank" style="color:#1e40af;font-size:10px;text-decoration:underline;flex:1;word-break:break-all;">${l.val}</a>
+      <button onclick="event.stopPropagation();copyText('${l.val.replace(/'/g,"\\'").replace(/"/g,"&quot;")}',this)" style="font-size:10px;padding:1px 5px;border:0.5px solid #c4b5fd;border-radius:3px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
+    </div>`
+  ).join('');
+
+  // 키워드 전체
+  const tagsHtml = `
+    <div style="font-size:11px;color:var(--text-sec);font-weight:500;margin:8px 0 3px;">태그 키워드</div>
+    <div style="position:relative;">
+      <div style="font-size:11px;color:var(--text-sec);line-height:1.7;background:#fff;padding:6px 8px 6px 8px;border-radius:var(--radius-sm);border:0.5px solid var(--border-md);word-break:break-all;padding-right:50px;">${p.keywords||'-'}</div>
+      <button onclick="event.stopPropagation();copyText('${(p.keywords||'').replace(/'/g,"\\'").replace(/"/g,"&quot;")}',this)" style="position:absolute;top:4px;right:4px;font-size:10px;padding:2px 7px;border:0.5px solid #c4b5fd;border-radius:4px;background:#ede9fe;color:#5b21b6;cursor:pointer;">복사</button>
+    </div>`;
+
+  // 버튼 3개
+  const btnsHtml = `
+    <div class="row mt" style="gap:6px;" onclick="event.stopPropagation()">
+      <button class="btn sm" onclick="masterUseAsIs()" style="flex:1;background:#5b21b6;color:#fff;border-color:#5b21b6;">그대로 저장</button>
+      <button class="btn sm" onclick="masterEditManual()" style="flex:1;">수동 수정</button>
+      <button class="btn sm" onclick="masterRunAI()" style="flex:1;background:#1a1a1a;color:#fff;">AI 재분석</button>
+    </div>`;
+
+  detail.innerHTML = linksHtml + tagsHtml + btnsHtml;
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+function cancelMasterPreview() {
+  masterSelected = null;
+  document.querySelectorAll('[id^="mcard-detail-"]').forEach(el => {
+    el.style.display = 'none';
+    el.closest('.search-item').style.background = '';
+  });
 }
 
 function cancelMasterPreview() {
