@@ -74,7 +74,13 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 </head>
 <body>
 <div class="layout">
-  <h1>소싱 키워드 관리 도구</h1>
+  <h1 style="display:flex;justify-content:space-between;align-items:center;">
+    <span>소싱 키워드 관리 도구</span>
+    <span style="font-size:12px;font-weight:400;color:#666;">
+      <span id="authUser" style="margin-right:8px;"></span>
+      <button onclick="logout()" style="font-size:11px;padding:3px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:6px;background:#fff;cursor:pointer;color:#666;">로그아웃</button>
+    </span>
+  </h1>
 
   <!-- 왼쪽: 6단계 -->
   <div class="panel">
@@ -266,6 +272,19 @@ textarea{height:auto;padding:8px 10px;resize:vertical;}
 </div>
 
 <script>
+// ── 로그인 체크 ─────────────────────────────────────────────────
+(function(){
+  if(!sessionStorage.getItem('auth_token')) location.href='/login.html';
+  const u=sessionStorage.getItem('auth_user');
+  if(u) document.addEventListener('DOMContentLoaded',()=>{const el=document.getElementById('authUser');if(el)el.textContent=u+'님';});
+})();
+
+function logout(){
+  sessionStorage.removeItem('auth_token');
+  sessionStorage.removeItem('auth_user');
+  location.href='/login.html';
+}
+
 let imageBase64='', imageType='', imageUrl='', inputMode='upload';
 let claudeKws=[], userKws=[], finalKws=[], finalKwsWithVol=[];
 function getAllKws(){ return [...claudeKws, ...userKws]; }
