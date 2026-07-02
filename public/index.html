@@ -712,13 +712,22 @@ async function searchMaster() {
       wrap.innerHTML = '<div style="font-size:12px;color:var(--text-hint);padding:6px 0;">검색 결과 없음</div>';
       return;
     }
-    wrap.innerHTML = data.slice(0, 7).map((p, i) =>
-      `<div class="search-item" id="mcard-${i}" style="cursor:pointer;" onclick="toggleMasterCard(${i}, ${JSON.stringify(JSON.stringify(p))})">
-        <div class="name">${p.product_name}</div>
-        <div class="tags" style="margin-top:3px;">${(p.keywords||'').slice(0,50)}${(p.keywords||'').length>50?'...':''}</div>
-        <div id="mcard-detail-${i}" style="display:none;margin-top:10px;border-top:0.5px solid #c4b5fd;padding-top:10px;"></div>
-      </div>`
-    ).join('');
+    wrap.innerHTML = data.slice(0, 7).map((p, i) => {
+      const safeKw = (p.keywords||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      const safeP = JSON.stringify(JSON.stringify(p));
+      return `<div class="search-item" id="mcard-${i}" style="cursor:default;">
+        <div class="name" style="margin-bottom:4px;">${p.product_name}</div>
+        <div style="position:relative;padding-right:48px;">
+          <div class="tags" style="font-size:11px;line-height:1.7;word-break:break-all;">${p.keywords||'-'}</div>
+          <button onclick="copyText(document.getElementById('mkw-${i}').textContent,this)" style="position:absolute;top:0;right:0;font-size:10px;padding:2px 7px;border:0.5px solid #c4b5fd;border-radius:4px;background:#ede9fe;color:#5b21b6;cursor:pointer;white-space:nowrap;">복사</button>
+          <span id="mkw-${i}" style="display:none;">${p.keywords||''}</span>
+        </div>
+        <div style="text-align:right;margin-top:6px;">
+          <button onclick="toggleMasterCard(${i}, ${safeP})" id="mcard-btn-${i}" style="font-size:11px;padding:3px 10px;border:0.5px solid var(--border-md);border-radius:4px;background:#fff;cursor:pointer;color:var(--text-sec);">🔗 링크 보기 ▼</button>
+        </div>
+        <div id="mcard-detail-${i}" style="display:none;margin-top:8px;border-top:0.5px solid #c4b5fd;padding-top:8px;"></div>
+      </div>`;
+    }).join('');
   } catch(e) {
     wrap.innerHTML = '<div style="font-size:12px;color:#991b1b;">오류: ' + e.message + '</div>';
   }
@@ -733,6 +742,9 @@ function toggleMasterCard(idx, jsonStr) {
   document.querySelectorAll('[id^="mcard-detail-"]').forEach(el => {
     el.style.display = 'none';
     el.closest('.search-item').style.background = '';
+  });
+  document.querySelectorAll('[id^="mcard-btn-"]').forEach(el => {
+    el.textContent = '🔗 링크 보기 ▼';
   });
 
   if (isOpen) { masterSelected = null; return; }
@@ -756,23 +768,18 @@ function toggleMasterCard(idx, jsonStr) {
     </div>`
   ).join('');
 
-  // 키워드 전체
-  const tagsHtml = `
-    <div style="font-size:11px;color:var(--text-sec);font-weight:500;margin:8px 0 3px;">태그 키워드</div>
-    <div style="position:relative;">
-      <div style="font-size:11px;color:var(--text-sec);line-height:1.7;background:#fff;padding:6px 8px 6px 8px;border-radius:var(--radius-sm);border:0.5px solid var(--border-md);word-break:break-all;padding-right:50px;">${p.keywords||'-'}</div>
-      <button onclick="event.stopPropagation();copyText('${(p.keywords||'').replace(/'/g,"\\'").replace(/"/g,"&quot;")}',this)" style="position:absolute;top:4px;right:4px;font-size:10px;padding:2px 7px;border:0.5px solid #c4b5fd;border-radius:4px;background:#ede9fe;color:#5b21b6;cursor:pointer;">복사</button>
-    </div>`;
 
   // 버튼 3개
   const btnsHtml = `
-    <div class="row mt" style="gap:6px;" onclick="event.stopPropagation()">
+    <div class="row mt" style="gap:6px;">
       <button class="btn sm" onclick="masterUseAsIs()" style="flex:1;background:#5b21b6;color:#fff;border-color:#5b21b6;">그대로 저장</button>
       <button class="btn sm" onclick="masterEditManual()" style="flex:1;">수동 수정</button>
       <button class="btn sm" onclick="masterRunAI()" style="flex:1;background:#1a1a1a;color:#fff;">AI 재분석</button>
     </div>`;
 
-  detail.innerHTML = linksHtml + tagsHtml + btnsHtml;
+  const btn = document.getElementById(`mcard-btn-${idx}`);
+  if (btn) btn.textContent = "🔗 링크 닫기 ▲";
+  detail.innerHTML = linksHtml + btnsHtml;
 }
 
 function copyText(text, btn) {
@@ -791,10 +798,7 @@ function cancelMasterPreview() {
   });
 }
 
-function cancelMasterPreview() {
-  masterSelected = null;
-  document.getElementById('masterPreview').style.display = 'none';
-}
+
 
 // 그대로 저장: products에 저장 + master에서 삭제
 async function masterUseAsIs() {
