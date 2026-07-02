@@ -754,7 +754,6 @@ function toggleMasterCard(idx) {
 
   // 링크 3개
   const linkItems = [
-    { label: '🔗 상품링크', val: p.link },
     { label: '📦 발주링크', val: p.order_link },
     { label: '🖼 이미지링크', val: p.image_link }
   ];
@@ -818,7 +817,6 @@ function masterEditManual() {
   cancelMasterPreview();
   document.getElementById('masterSearchInput').value = '';
   document.getElementById('formName').scrollIntoView({ behavior: 'smooth' });
-  alert('수정 후 저장 버튼을 누르세요. 저장 시 소싱 DB에서 자동 삭제됩니다.');
 }
 
 // AI 새로 돌리기: 이미지 링크로 분석 시작
@@ -861,16 +859,18 @@ async function saveMasterToProducts(name, tags) {
   alert('저장 완료! 소싱 DB에서 삭제됐습니다.');
 }
 
-// 기존 saveProduct 오버라이드: master 대기 중이면 master도 삭제
+// 기존 saveProduct 오버라이드: master 대기 중이면 확인 후 삭제
 const _origSaveProduct = saveProduct;
 async function saveProduct() {
+  if (window._pendingMasterId) {
+    if (!confirm('저장 후 소싱 DB에서 해당 상품이 삭제됩니다. 계속하시겠습니까?')) return;
+  }
   await _origSaveProduct();
   if (window._pendingMasterId) {
     try {
       await fetch('/api/products?master=1&id=' + window._pendingMasterId, { method: 'DELETE' });
     } catch(e) { console.error('master 삭제 오류:', e); }
     window._pendingMasterId = null;
-    alert('소싱 DB에서도 삭제됐습니다.');
   }
 }
 </script>
