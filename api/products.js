@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       if (!q) return res.status(200).json([]);
       const encoded = encodeURIComponent(`%${q}%`);
       const resp = await fetch(
-        `${SUPABASE_URL}/rest/v1/products_master?product_name=ilike.${encoded}&select=id,product_name,keywords,image_link&order=product_name.asc&limit=10`,
+        `${SUPABASE_URL}/rest/v1/products_master?product_name=ilike.${encoded}&select=id,product_name,keywords,link,order_link,image_link&order=product_name.asc&limit=10`,
         { headers }
       );
       const data = await resp.json();
